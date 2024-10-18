@@ -1,55 +1,67 @@
-let gamepadIndex = null;
+let gamepadActive = false;
+let lastGamepadActivity = 0;
+const INACTIVITY_TIMEOUT = 60000; // 1 minute in milliseconds
 
-const BUTTON_PAUSE = 8;  // Minus button
-const BUTTON_PLAY = 9;   // Plus button
-const DPAD_UP = 12;
-const DPAD_DOWN = 13;
-const DPAD_LEFT = 14;
-const DPAD_RIGHT = 15;
+function initGamepad() {
+    window.addEventListener("gamepadconnected", (e) => {
+        console.log("Gamepad connected:", e.gamepad.id);
+        gamepadActive = true;
+        pressGamepadButton();
+    });
 
-let previousButtonStates = [];
+    window.addEventListener("gamepaddisconnected", (e) => {
+        console.log("Gamepad disconnected:", e.gamepad.id);
+        gamepadActive = false;
+        unpressGamepadButton();
+    });
+}
 
-window.addEventListener('gamepadconnected', (e) => {
-    gamepadIndex = e.gamepad.index;
-    console.log('Gamepad connected:', e.gamepad);
-    
-    // Initialize previous button states array
-    previousButtonStates = Array(e.gamepad.buttons.length).fill(false);
-});
+function pressGamepadButton() {
+    const gamepadModeButton = document.getElementById('gamepad-mode');
+    gamepadModeButton.classList.add('clicked');
+    lastGamepadActivity = Date.now();
+}
 
-window.addEventListener('gamepaddisconnected', (e) => {
-    if (e.gamepad.index === gamepadIndex) {
-        gamepadIndex = null;
-        console.log('Gamepad disconnected:', e.gamepad);
+function unpressGamepadButton() {
+    const gamepadModeButton = document.getElementById('gamepad-mode');
+    gamepadModeButton.classList.remove('clicked');
+}
+
+function checkGamepadActivity() {
+    const now = Date.now();
+    if (gamepadActive && now - lastGamepadActivity > INACTIVITY_TIMEOUT) {
+        unpressGamepadButton();
+    } else if (now - lastGamepadActivity <= INACTIVITY_TIMEOUT) {
+        pressGamepadButton();
     }
-});
+}
 
 function handleGamepadInput() {
-    if (gamepadIndex === null) return;
+    const gamepads = navigator.getGamepads();
+    if (!gamepads) return;
 
-    const gamepad = navigator.getGamepads()[gamepadIndex];
-    if (!gamepad) return;
+    for (const gamepad of gamepads) {
+        if (!gamepad) continue;
 
-    // Check and log button presses
-    for (let i = 0; i < gamepad.buttons.length; i++) {
-        const buttonPressed = gamepad.buttons[i].pressed;
-
-        if (buttonPressed && !previousButtonStates[i]) {
-            console.log(`Button ${i} pressed`);
- 
- // if button release need to be logged, enable this part
- //       } else if (!buttonPressed && previousButtonStates[i]) {
- //           console.log(`Button ${i} released`);
- 
-}
-
-        previousButtonStates[i] = buttonPressed;  // Update button state
+        // Check gamepad buttons and axes
+        if (gamepad.buttons.some(button => button.pressed) || 
+            gamepad.axes.some(axis => Math.abs(axis) > 0.1)) {
+            gamepadActive = true;
+            lastGamepadActivity = Date.now();
+            pressGamepadButton();
+            return;
+        }
     }
 }
 
-function gameLoop() {
+// Initialize gamepad support
+initGamepad();
+
+// Add this to your game loop or request animation frame
+function gamepadLoop() {
     handleGamepadInput();
-    requestAnimationFrame(gameLoop);  // Loop to check for inputs continuously
+    checkGamepadActivity();
+    requestAnimationFrame(gamepadLoop);
 }
 
-gameLoop();
+gamepadLoop();
