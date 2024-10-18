@@ -283,14 +283,14 @@ canvas.addEventListener('touchend', (e) => {
 
 wallModeButton.addEventListener('click', () => {
     wallMode = !wallMode;
-    wallModeButton.textContent = `🛡️Walls ${wallMode ? 'I' : '0'}`;
+    wallModeButton.textContent = `🛡️ Walls`;
     wallModeButton.classList.toggle('clicked');
     gameAreaContainer.classList.toggle('walls-on', wallMode);
 });
 
 aiModeButton.addEventListener('click', () => {
     aiMode = !aiMode;
-    aiModeButton.textContent = `🤖Autoplay ${aiMode ? 'I' : '0'}`;
+    aiModeButton.textContent = `🤖 Autoplay`;
     aiModeButton.classList.toggle('clicked');
 });
 
