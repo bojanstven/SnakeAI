@@ -73,6 +73,9 @@ function drawGame() {
         drawPauseScreen();
         return;
     }
+    if (aiMode) {
+        moveAI();
+    }
     moveSnake();
     drawFood();
     drawSnake();
@@ -112,30 +115,20 @@ function moveSnake() {
         score++;
         updateLevel();
         generateFood();
-        if (gamepadIndex !== null) {
-            triggerRumble(0.2, 0.1, 100);  // Brief weak rumble for eating food
-        }
     } else {
         snake.pop();
     }
 }
 
-
 function checkCollision() {
     const head = snake[0];
     if (wallMode && (head.x < 0 || head.x >= tileCount || head.y < 0 || head.y >= tileCount)) {
         gameOver = true;
-        if (gamepadIndex !== null) {
-            triggerRumble(1.0, 0.5, 500);  // Strong rumble for crash
-        }
     }
 
     for (let i = 1; i < snake.length; i++) {
         if (head.x === snake[i].x && head.y === snake[i].y) {
             gameOver = true;
-            if (gamepadIndex !== null) {
-                triggerRumble(1.0, 0.5, 500);  // Strong rumble for crash
-            }
             break;
         }
     }
@@ -144,7 +137,6 @@ function checkCollision() {
         updateHighScore();
     }
 }
-
 
 function drawGameOver() {
     ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
@@ -310,11 +302,8 @@ function gameLoop() {
     if (!isPaused) {
         drawGame();
     }
-    handleGamepadInput();
     setTimeout(gameLoop, getGameSpeed());
 }
-
-
 
 function drawPauseScreen() {
     ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';

@@ -147,4 +147,3 @@ function calculateFreeSpace(startX, startY) {
     return space;
 }
 
-
