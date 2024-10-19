@@ -6,7 +6,7 @@ const highScoreElement = document.getElementById('high-score-value');
 const wallModeButton = document.getElementById('wall-mode');
 const aiModeButton = document.getElementById('ai-mode');
 const gameAreaContainer = document.getElementById('game-area-container');
-const version = 'v2.0'; // update version info centrally here.
+const version = 'v2.1'; // Joystick support added
 
 
 const gridSize = 20;
