@@ -3,6 +3,7 @@ let lastGamepadActivity = 0;
 const INACTIVITY_TIMEOUT = 60000; // 1 minute in milliseconds
 let lastDirectionChange = { dx: 0, dy: 0, timestamp: 0 };
 const DIRECTION_CHANGE_THRESHOLD = 30; // Minimum time (ms) between direction changes
+const JOYSTICK_THRESHOLD = 0.5; // Threshold for joystick input
 
 function initGamepad() {
     window.addEventListener("gamepadconnected", (e) => {
@@ -54,6 +55,40 @@ function handleGamepadInput() {
         else if (gamepad.buttons[13].pressed) newDy = 1; // Down
         else if (gamepad.buttons[14].pressed) newDx = -1; // Left
         else if (gamepad.buttons[15].pressed) newDx = 1; // Right
+
+        // Check left joystick input
+        const leftJoystickX = gamepad.axes[0];
+        const leftJoystickY = gamepad.axes[1];
+
+        // Check right joystick input
+        const rightJoystickX = gamepad.axes[2];
+        const rightJoystickY = gamepad.axes[3];
+
+        // Function to process joystick input
+        function processJoystickInput(x, y) {
+            if (Math.abs(x) > Math.abs(y)) {
+                if (x < -JOYSTICK_THRESHOLD) return { dx: -1, dy: 0 };
+                else if (x > JOYSTICK_THRESHOLD) return { dx: 1, dy: 0 };
+            } else {
+                if (y < -JOYSTICK_THRESHOLD) return { dx: 0, dy: -1 };
+                else if (y > JOYSTICK_THRESHOLD) return { dx: 0, dy: 1 };
+            }
+            return { dx: 0, dy: 0 };
+        }
+
+        // Process left joystick
+        const leftJoystickInput = processJoystickInput(leftJoystickX, leftJoystickY);
+        // Process right joystick
+        const rightJoystickInput = processJoystickInput(rightJoystickX, rightJoystickY);
+
+        // Prioritize joystick input over D-pad
+        if (leftJoystickInput.dx !== 0 || leftJoystickInput.dy !== 0) {
+            newDx = leftJoystickInput.dx;
+            newDy = leftJoystickInput.dy;
+        } else if (rightJoystickInput.dx !== 0 || rightJoystickInput.dy !== 0) {
+            newDx = rightJoystickInput.dx;
+            newDy = rightJoystickInput.dy;
+        }
 
         // Change direction if it's different and enough time has passed
         if ((newDx !== 0 || newDy !== 0) && 
