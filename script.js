@@ -411,6 +411,7 @@ function updateVersionInfo() {
     if (versionElement) {
         versionElement.textContent = version;
     }
+    document.title = `Snake AI Game ${version}`; // Update version info in the title dynamically
 }
 
 document.addEventListener('DOMContentLoaded', updateVersionInfo);
