@@ -98,20 +98,20 @@ function handleGamepadInput() {
             lastDirectionChange = { dx: newDx, dy: newDy, timestamp: now };
         }
 
-        // Minus button - Pause game
-        if (gamepad.buttons[8].pressed && !gamepad.buttons[8].wasPressed) {
+        // Minus button - Pause game (only if not already paused and not game over)
+        if (gamepad.buttons[8].pressed && !gamepad.buttons[8].wasPressed && !isPaused && !gameOver) {
             console.log("Minus button pressed - Pausing game");
             isPaused = true;
             drawPauseScreen();
         }
 
-        // Plus button or L/ZL/R/ZR - Unpause or restart game
-        if ((gamepad.buttons[9].pressed && !gamepad.buttons[9].wasPressed) ||
-            (gamepad.buttons[4].pressed && !gamepad.buttons[4].wasPressed) ||
-            (gamepad.buttons[5].pressed && !gamepad.buttons[5].wasPressed) ||
-            (gamepad.buttons[6].pressed && !gamepad.buttons[6].wasPressed) ||
-            (gamepad.buttons[7].pressed && !gamepad.buttons[7].wasPressed)) {
-            console.log("Plus or L/ZL/R/ZR button pressed - Unpausing/Restarting game");
+        // Plus, A, B, X, or Y button - Unpause or restart game
+        if ((gamepad.buttons[9].pressed && !gamepad.buttons[9].wasPressed) || // Plus
+            (gamepad.buttons[0].pressed && !gamepad.buttons[0].wasPressed) || // A
+            (gamepad.buttons[1].pressed && !gamepad.buttons[1].wasPressed) || // B
+            (gamepad.buttons[2].pressed && !gamepad.buttons[2].wasPressed) || // X
+            (gamepad.buttons[3].pressed && !gamepad.buttons[3].wasPressed)) { // Y
+            console.log("Plus, A, B, X, or Y button pressed - Unpausing/Restarting game");
             if (gameOver) {
                 initializeGame();
             } else if (isPaused) {
@@ -119,34 +119,32 @@ function handleGamepadInput() {
             }
         }
 
-        // R button - Start autoplay
-        if (gamepad.buttons[5].pressed && !gamepad.buttons[5].wasPressed) {
-            console.log("R button pressed - Starting autoplay");
-            aiMode = true;
-            aiModeButton.classList.add('clicked');
+        // R or ZR button - Toggle autoplay
+        if ((gamepad.buttons[5].pressed && !gamepad.buttons[5].wasPressed) ||
+            (gamepad.buttons[7].pressed && !gamepad.buttons[7].wasPressed)) {
+            aiMode = !aiMode;
+            if (aiMode) {
+                console.log("R or ZR button pressed - Starting autoplay");
+                aiModeButton.classList.add('clicked');
+            } else {
+                console.log("R or ZR button pressed - Stopping autoplay");
+                aiModeButton.classList.remove('clicked');
+            }
         }
 
-        // ZR button - Stop autoplay
-        if (gamepad.buttons[7].pressed && !gamepad.buttons[7].wasPressed) {
-            console.log("ZR button pressed - Stopping autoplay");
-            aiMode = false;
-            aiModeButton.classList.remove('clicked');
-        }
-
-        // L button - Activate walls
-        if (gamepad.buttons[4].pressed && !gamepad.buttons[4].wasPressed) {
-            console.log("L button pressed - Activating walls");
-            wallMode = true;
-            wallModeButton.classList.add('clicked');
-            gameAreaContainer.classList.add('walls-on');
-        }
-
-        // ZL button - Remove walls
-        if (gamepad.buttons[6].pressed && !gamepad.buttons[6].wasPressed) {
-            console.log("ZL button pressed - Removing walls");
-            wallMode = false;
-            wallModeButton.classList.remove('clicked');
-            gameAreaContainer.classList.remove('walls-on');
+        // L or ZL button - Toggle wall mode
+        if ((gamepad.buttons[4].pressed && !gamepad.buttons[4].wasPressed) ||
+            (gamepad.buttons[6].pressed && !gamepad.buttons[6].wasPressed)) {
+            wallMode = !wallMode;
+            if (wallMode) {
+                console.log("L or ZL button pressed - Activating walls");
+                wallModeButton.classList.add('clicked');
+                gameAreaContainer.classList.add('walls-on');
+            } else {
+                console.log("L or ZL button pressed - Removing walls");
+                wallModeButton.classList.remove('clicked');
+                gameAreaContainer.classList.remove('walls-on');
+            }
         }
 
         // Update wasPressed state for all buttons
