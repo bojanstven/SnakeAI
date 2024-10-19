@@ -6,7 +6,7 @@ const highScoreElement = document.getElementById('high-score-value');
 const wallModeButton = document.getElementById('wall-mode');
 const aiModeButton = document.getElementById('ai-mode');
 const gameAreaContainer = document.getElementById('game-area-container');
-const version = 'v2.2'; // Added sound effects (gameOver, eatFood, unPause)
+const version = 'v2.3'; // Keyboard autoPlay and wallMode
 
 const pauseSound = document.getElementById('pauseSound');
 const unpauseSound = document.getElementById('unpauseSound');
@@ -269,6 +269,15 @@ document.addEventListener('keydown', (e) => {
         case 'D':
             changeDirection(1, 0);
             break;
+           
+            case 'Enter':
+                aiModeButton.click(); // Simulate click on aiModeButton
+                break;
+            case 'Shift':
+                if (e.location === KeyboardEvent.DOM_KEY_LOCATION_LEFT) {
+                    wallModeButton.click(); // Simulate click on wallModeButton only for left Shift
+                }
+                break;
     }
 });
 

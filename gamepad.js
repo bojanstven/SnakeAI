@@ -141,13 +141,11 @@ function handleGamepadInput() {
             lastDirectionChange = { dx: newDx, dy: newDy, timestamp: now };
         }
 
-        // Minus or Plus button - Toggle pause/unpause
+        // Minus or Plus button - Toggle pause/unpause only if game is not over
         if ((gamepad.buttons[8].pressed && !gamepad.buttons[8].wasPressed) || // Minus
             (gamepad.buttons[9].pressed && !gamepad.buttons[9].wasPressed)) { // Plus
-            console.log("Minus or Plus button pressed - Toggling pause/unpause");
-            if (gameOver) {
-                initializeGame();
-            } else {
+            if (!gameOver) {
+                console.log("Minus or Plus button pressed - Toggling pause/unpause");
                 isPaused = !isPaused;
                 if (isPaused) {
                     drawPauseScreen();
