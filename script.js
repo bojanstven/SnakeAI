@@ -6,7 +6,7 @@ const highScoreElement = document.getElementById('high-score-value');
 const wallModeButton = document.getElementById('wall-mode');
 const aiModeButton = document.getElementById('ai-mode');
 const gameAreaContainer = document.getElementById('game-area-container');
-const version = 'v1'; // Change this to v2, v3, etc., for different versions.
+const version = 'v2.0'; // update version info centrally here.
 
 
 const gridSize = 20;
