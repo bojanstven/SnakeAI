@@ -406,8 +406,17 @@ canvas.addEventListener('touchend', (e) => {
     }
 });
 
+function updateVersionInfo() {
+    const versionElement = document.getElementById('version-number');
+    if (versionElement) {
+        versionElement.textContent = version;
+    }
+}
 
+document.addEventListener('DOMContentLoaded', updateVersionInfo);
 
 
 initializeGame();
 gameLoop();
+
+
