@@ -6,8 +6,10 @@ const highScoreElement = document.getElementById('high-score-value');
 const wallModeButton = document.getElementById('wall-mode');
 const aiModeButton = document.getElementById('ai-mode');
 const gameAreaContainer = document.getElementById('game-area-container');
-const version = 'v2.1'; // Joystick support added
+const version = 'v2.2'; // Added sound effects (gameOver, eatFood, unPause)
 
+const pauseSound = document.getElementById('pauseSound');
+const unpauseSound = document.getElementById('unpauseSound');
 
 const gridSize = 20;
 const tileCount = 18;
@@ -26,6 +28,8 @@ let touchStartX = 0;
 let touchStartY = 0;
 
 let isPaused = false;
+let gameOverSoundPlayed = false;
+
 
 function resizeCanvas() {
     const container = canvas.parentElement;
@@ -50,6 +54,8 @@ function initializeGame() {
     score = 0;
     level = 1;
     gameOver = false;
+    gameOverSoundPlayed = false;
+
     loadHighScore();
     updateScore();
 }
@@ -115,6 +121,13 @@ function moveSnake() {
         score++;
         updateLevel();
         generateFood();
+        
+        // Play food eaten sound
+        const eatSound = document.getElementById('eatSound');
+        if (eatSound) {
+            eatSound.currentTime = 0; // Reset the audio to the beginning
+            eatSound.play().catch(error => console.log("Audio playback failed:", error));
+        }
     } else {
         snake.pop();
     }
@@ -139,6 +152,12 @@ function checkCollision() {
 }
 
 function drawGameOver() {
+    if (!gameOverSoundPlayed) {
+        const gameOverSound = document.getElementById('gameOverSound');
+        gameOverSound.play();
+        gameOverSoundPlayed = true;
+    }
+
     ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = 'white';
@@ -365,17 +384,20 @@ document.addEventListener('keydown', (e) => {
             activateKey(8);
             changeDirection(1, 0);
             break;
-         case 'Escape':
-             if (gameOver) {
+        case 'Escape':
+              if (gameOver) {
                   initializeGame();
-               } else {
-                isPaused = !isPaused;
-             if (isPaused) {
-                  drawPauseScreen();
-        }
-    }
-    break;
-
+                } else {
+                    isPaused = !isPaused;
+                    if (isPaused) {
+                        pauseSound.play().catch(error => console.log("Audio playback failed:", error));
+                        drawPauseScreen();
+                    } else {
+                        unpauseSound.play().catch(error => console.log("Audio playback failed:", error));
+                    }
+                }
+                break;
+            
 
     }
 });

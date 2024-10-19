@@ -5,11 +5,14 @@ let lastDirectionChange = { dx: 0, dy: 0, timestamp: 0 };
 const DIRECTION_CHANGE_THRESHOLD = 30; // Minimum time (ms) between direction changes
 const JOYSTICK_THRESHOLD = 0.5; // Threshold for joystick input
 
+
+
 function initGamepad() {
     window.addEventListener("gamepadconnected", (e) => {
         console.log("Gamepad connected:", e.gamepad.id);
         gamepadActive = true;
         pressGamepadButton();
+        playGamepadConnectedSound();
     });
 
     window.addEventListener("gamepaddisconnected", (e) => {
@@ -18,6 +21,46 @@ function initGamepad() {
         unpressGamepadButton();
     });
 }
+
+function playGamepadConnectedSound() {
+    const gamepadSound = document.getElementById('gamepadSound');
+    if (gamepadSound) {
+        gamepadSound.play().catch(error => {
+            console.log("Audio playback failed:", error);
+            // Fallback: Play the sound on the next user interaction
+            document.addEventListener('click', function playOnClick() {
+                gamepadSound.play();
+                document.removeEventListener('click', playOnClick);
+            }, { once: true });
+        });
+    } else {
+        console.error("Gamepad sound element not found");
+    }
+}
+
+function playPauseSound() {
+    const pauseSound = document.getElementById('pauseSound');
+    if (pauseSound) {
+        pauseSound.play().catch(error => {
+            console.log("Pause sound playback failed:", error);
+        });
+    } else {
+        console.error("Pause sound element not found");
+    }
+}
+
+function playUnpauseSound() {
+    const unpauseSound = document.getElementById('unpauseSound');
+    if (unpauseSound) {
+        unpauseSound.play().catch(error => {
+            console.log("Unpause sound playback failed:", error);
+        });
+    } else {
+        console.error("Unpause sound element not found");
+    }
+}
+
+
 
 function pressGamepadButton() {
     const gamepadModeButton = document.getElementById('gamepad-mode');
@@ -98,24 +141,34 @@ function handleGamepadInput() {
             lastDirectionChange = { dx: newDx, dy: newDy, timestamp: now };
         }
 
-        // Minus button - Pause game (only if not already paused and not game over)
-        if (gamepad.buttons[8].pressed && !gamepad.buttons[8].wasPressed && !isPaused && !gameOver) {
-            console.log("Minus button pressed - Pausing game");
-            isPaused = true;
-            drawPauseScreen();
+        // Minus or Plus button - Toggle pause/unpause
+        if ((gamepad.buttons[8].pressed && !gamepad.buttons[8].wasPressed) || // Minus
+            (gamepad.buttons[9].pressed && !gamepad.buttons[9].wasPressed)) { // Plus
+            console.log("Minus or Plus button pressed - Toggling pause/unpause");
+            if (gameOver) {
+                initializeGame();
+            } else {
+                isPaused = !isPaused;
+                if (isPaused) {
+                    drawPauseScreen();
+                    playPauseSound();
+                } else {
+                    playUnpauseSound();
+                }
+            }
         }
 
-        // Plus, A, B, X, or Y button - Unpause or restart game
-        if ((gamepad.buttons[9].pressed && !gamepad.buttons[9].wasPressed) || // Plus
-            (gamepad.buttons[0].pressed && !gamepad.buttons[0].wasPressed) || // A
+        // A, B, X, or Y button - Unpause or restart game
+        if ((gamepad.buttons[0].pressed && !gamepad.buttons[0].wasPressed) || // A
             (gamepad.buttons[1].pressed && !gamepad.buttons[1].wasPressed) || // B
             (gamepad.buttons[2].pressed && !gamepad.buttons[2].wasPressed) || // X
             (gamepad.buttons[3].pressed && !gamepad.buttons[3].wasPressed)) { // Y
-            console.log("Plus, A, B, X, or Y button pressed - Unpausing/Restarting game");
+            console.log("A, B, X, or Y button pressed - Unpausing/Restarting game");
             if (gameOver) {
                 initializeGame();
             } else if (isPaused) {
                 isPaused = false;
+                playUnpauseSound();
             }
         }
 
