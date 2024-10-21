@@ -6,10 +6,16 @@ const highScoreElement = document.getElementById('high-score-value');
 const wallModeButton = document.getElementById('wall-mode');
 const aiModeButton = document.getElementById('ai-mode');
 const gameAreaContainer = document.getElementById('game-area-container');
-const version = 'v2.3'; // Keyboard autoPlay and wallMode
+const version = 'v2.4'; // autoPlay and wallMode sound effects added
 
 const pauseSound = document.getElementById('pauseSound');
 const unpauseSound = document.getElementById('unpauseSound');
+const wallOnSound = document.getElementById('wallOnSound');
+const wallOffSound = document.getElementById('wallOffSound');
+const eatSound = document.getElementById('eatSound');
+const gameOverSound = document.getElementById('gameOverSound');
+const autoplayOnSound = document.getElementById('autoplayOnSound');
+const autoplayOffSound = document.getElementById('autoplayOffSound');
 
 const gridSize = 20;
 const tileCount = 18;
@@ -29,7 +35,6 @@ let touchStartY = 0;
 
 let isPaused = false;
 let gameOverSoundPlayed = false;
-
 
 function resizeCanvas() {
     const container = canvas.parentElement;
@@ -122,12 +127,8 @@ function moveSnake() {
         updateLevel();
         generateFood();
         
-        // Play food eaten sound
-        const eatSound = document.getElementById('eatSound');
-        if (eatSound) {
-            eatSound.currentTime = 0; // Reset the audio to the beginning
-            eatSound.play().catch(error => console.log("Audio playback failed:", error));
-        }
+        eatSound.currentTime = 0;
+        eatSound.play().catch(error => console.log("Audio playback failed:", error));
     } else {
         snake.pop();
     }
@@ -153,8 +154,7 @@ function checkCollision() {
 
 function drawGameOver() {
     if (!gameOverSoundPlayed) {
-        const gameOverSound = document.getElementById('gameOverSound');
-        gameOverSound.play();
+        gameOverSound.play().catch(error => console.log("Audio playback failed:", error));
         gameOverSoundPlayed = true;
     }
 
@@ -179,7 +179,7 @@ function updateLevel() {
 }
 
 function loadHighScore() {
-    const storedHighScore = localStorage.getItem('snakeHighScore_${version}');
+    const storedHighScore = localStorage.getItem(`snakeHighScore_${version}`);
     highScore = storedHighScore ? parseInt(storedHighScore) : 0;
     highScoreElement.textContent = highScore;
 }
@@ -187,7 +187,7 @@ function loadHighScore() {
 function updateHighScore() {
     if (score > highScore) {
         highScore = score;
-        localStorage.setItem('snakeHighScore_${version}', highScore);
+        localStorage.setItem(`snakeHighScore_${version}`, highScore);
         highScoreElement.textContent = highScore;
     }
 }
@@ -243,119 +243,37 @@ function changeDirection(newDx, newDy) {
     dy = newDy;
 }
 
+function toggleWallMode() {
+    wallMode = !wallMode;
+    wallModeButton.textContent = `🛡️ Walls`;
+    wallModeButton.classList.toggle('clicked', wallMode);
+    gameAreaContainer.classList.toggle('walls-on', wallMode);
+    
+    if (wallMode) {
+        wallOnSound.play().catch(error => console.log("Audio playback failed:", error));
+    } else {
+        wallOffSound.play().catch(error => console.log("Audio playback failed:", error));
+    }
+}
+
+function toggleAIMode() {
+    aiMode = !aiMode;
+    aiModeButton.textContent = `🤖 Autoplay`;
+    aiModeButton.classList.toggle('clicked', aiMode);
+    
+    if (aiMode) {
+        autoplayOnSound.play().catch(error => console.log("Audio playback failed:", error));
+    } else {
+        autoplayOffSound.play().catch(error => console.log("Audio playback failed:", error));
+    }
+}
+
 document.addEventListener('keydown', (e) => {
-    if (gameOver && e.code === 'Space') {
+    if (gameOver && (e.code === 'Space' || e.key === 'Escape')) {
         initializeGame();
         return;
     }
-    switch (e.key) {
-        case 'ArrowUp':
-        case 'w':
-        case 'W':
-            changeDirection(0, -1);
-            break;
-        case 'ArrowDown':
-        case 's':
-        case 'S':
-            changeDirection(0, 1);
-            break;
-        case 'ArrowLeft':
-        case 'a':
-        case 'A':
-            changeDirection(-1, 0);
-            break;
-        case 'ArrowRight':
-        case 'd':
-        case 'D':
-            changeDirection(1, 0);
-            break;
-           
-            case 'Enter':
-                aiModeButton.click(); // Simulate click on aiModeButton
-                break;
-            case 'Shift':
-                if (e.location === KeyboardEvent.DOM_KEY_LOCATION_LEFT) {
-                    wallModeButton.click(); // Simulate click on wallModeButton only for left Shift
-                }
-                break;
-    }
-});
 
-canvas.addEventListener('touchstart', (e) => {
-    touchStartX = e.touches[0].clientX;
-    touchStartY = e.touches[0].clientY;
-    if (gameOver) {
-        initializeGame();
-    }
-}, false);
-
-canvas.addEventListener('touchmove', (e) => {
-    e.preventDefault();
-}, false);
-
-canvas.addEventListener('touchend', (e) => {
-    if (aiMode || gameOver) return;
-
-    let touchEndX = e.changedTouches[0].clientX;
-    let touchEndY = e.changedTouches[0].clientY;
-
-    let dx = touchEndX - touchStartX;
-    let dy = touchEndY - touchStartY;
-
-    if (Math.abs(dx) > Math.abs(dy)) {
-        changeDirection(dx > 0 ? 1 : -1, 0);
-    } else {
-        changeDirection(0, dy > 0 ? 1 : -1);
-    }
-}, false);
-
-wallModeButton.addEventListener('click', () => {
-    wallMode = !wallMode;
-    wallModeButton.textContent = `🛡️ Walls`;
-    wallModeButton.classList.toggle('clicked');
-    gameAreaContainer.classList.toggle('walls-on', wallMode);
-});
-
-aiModeButton.addEventListener('click', () => {
-    aiMode = !aiMode;
-    aiModeButton.textContent = `🤖 Autoplay`;
-    aiModeButton.classList.toggle('clicked');
-});
-
-function getGameSpeed() {
-    return Math.max(150 - (level - 1), 50);
-}
-
-function gameLoop() {
-    if (!isPaused) {
-        drawGame();
-    }
-    setTimeout(gameLoop, getGameSpeed());
-}
-
-function drawPauseScreen() {
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = 'white';
-    ctx.font = `${canvas.width / 15}px Roboto`;
-    ctx.textAlign = 'center';
-    ctx.fillText('Paused', canvas.width / 2, canvas.height / 2 - canvas.width / 15);
-    ctx.fillText(`Score: ${score}`, canvas.width / 2, canvas.height / 2 + canvas.width / 30);
-    ctx.font = `${canvas.width / 25}px Roboto`;
-    ctx.fillText('Tap or Press Esc to Continue', canvas.width / 2, canvas.height / 2 + canvas.width / 10);
-}
-
-
-
-function activateKey(keyIndex) {
-    const keyElement = document.querySelector(`.key:nth-child(${keyIndex})`);
-    if (keyElement) {
-        keyElement.classList.add('active');
-        setTimeout(() => keyElement.classList.remove('active'), 200);
-    }
-}
-
-document.addEventListener('keydown', (e) => {
     switch (e.key) {
         case 'ArrowUp':
             activateKey(1);
@@ -393,23 +311,39 @@ document.addEventListener('keydown', (e) => {
             activateKey(8);
             changeDirection(1, 0);
             break;
+        case 'Enter':
+            toggleAIMode();
+            break;
+        case 'Shift':
+            if (e.location === KeyboardEvent.DOM_KEY_LOCATION_LEFT) {
+                toggleWallMode();
+            }
+            break;
         case 'Escape':
-              if (gameOver) {
-                  initializeGame();
+            if (!gameOver) {
+                isPaused = !isPaused;
+                if (isPaused) {
+                    pauseSound.play().catch(error => console.log("Audio playback failed:", error));
+                    drawPauseScreen();
                 } else {
-                    isPaused = !isPaused;
-                    if (isPaused) {
-                        pauseSound.play().catch(error => console.log("Audio playback failed:", error));
-                        drawPauseScreen();
-                    } else {
-                        unpauseSound.play().catch(error => console.log("Audio playback failed:", error));
-                    }
+                    unpauseSound.play().catch(error => console.log("Audio playback failed:", error));
                 }
-                break;
-            
-
+            }
+            break;
     }
 });
+
+canvas.addEventListener('touchstart', (e) => {
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+    if (gameOver) {
+        initializeGame();
+    }
+}, false);
+
+canvas.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+}, false);
 
 canvas.addEventListener('touchend', (e) => {
     if (gameOver) {
@@ -437,18 +371,49 @@ canvas.addEventListener('touchend', (e) => {
     }
 });
 
+wallModeButton.addEventListener('click', toggleWallMode);
+aiModeButton.addEventListener('click', toggleAIMode);
+
+function activateKey(keyIndex) {
+    const keyElement = document.querySelector(`.key:nth-child(${keyIndex})`);
+    if (keyElement) {
+        keyElement.classList.add('active');
+        setTimeout(() => keyElement.classList.remove('active'), 200);
+    }
+}
+
+function drawPauseScreen() {
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = 'white';
+    ctx.font = `${canvas.width / 15}px Roboto`;
+    ctx.textAlign = 'center';
+    ctx.fillText('Paused', canvas.width / 2, canvas.height / 2 - canvas.width / 15);
+    ctx.fillText(`Score: ${score}`, canvas.width / 2, canvas.height / 2 + canvas.width / 30);
+    ctx.font = `${canvas.width / 25}px Roboto`;
+    ctx.fillText('Tap or Press Esc to Continue', canvas.width / 2, canvas.height / 2 + canvas.width / 10);
+}
+
+function getGameSpeed() {
+    return Math.max(150 - (level - 1) * 5, 50);
+}
+
+function gameLoop() {
+    if (!isPaused) {
+        drawGame();
+    }
+    setTimeout(gameLoop, getGameSpeed());
+}
+
 function updateVersionInfo() {
     const versionElement = document.getElementById('version-number');
     if (versionElement) {
         versionElement.textContent = version;
     }
-    document.title = `Snake AI Game ${version}`; // Update version info in the title dynamically
+    document.title = `Snake AI Game ${version}`;
 }
 
 document.addEventListener('DOMContentLoaded', updateVersionInfo);
 
-
 initializeGame();
 gameLoop();
-
-
