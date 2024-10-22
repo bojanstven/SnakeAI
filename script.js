@@ -7,7 +7,7 @@ const highScoreElement = document.getElementById('high-score-value');
 const wallModeButton = document.getElementById('wall-mode');
 const aiModeButton = document.getElementById('ai-mode');
 const gameAreaContainer = document.getElementById('game-area-container');
-const version = 'v2.8'; // touch console logging
+const version = 'v2.8.1'; // Icon highscore & style
 
 // Audio elements
 const pauseSound = document.getElementById('pauseSound');
