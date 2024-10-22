@@ -6,7 +6,7 @@ const highScoreElement = document.getElementById('high-score-value');
 const wallModeButton = document.getElementById('wall-mode');
 const aiModeButton = document.getElementById('ai-mode');
 const gameAreaContainer = document.getElementById('game-area-container');
-const version = 'v2.5'; // gamepad merged into script.js
+const version = 'v2.6'; // smooth play on gamepad
 
 // Audio elements
 const pauseSound = document.getElementById('pauseSound');
@@ -40,7 +40,7 @@ let gamepadActive = false;
 let lastGamepadActivity = 0;
 const INACTIVITY_TIMEOUT = 60000; // 1 minute in milliseconds
 let lastDirectionChange = { dx: 0, dy: 0, timestamp: 0 };
-const DIRECTION_CHANGE_THRESHOLD = 30; // Minimum time (ms) between direction changes
+const DIRECTION_CHANGE_THRESHOLD = 16; // Minimum time (ms) between direction changes
 const JOYSTICK_THRESHOLD = 0.5; // Threshold for joystick input
 
 // Touch variables
@@ -83,6 +83,7 @@ function generateFood() {
 }
 
 function toggleWallMode() {
+    console.log(`Wall mode ${!wallMode ? 'activated' : 'deactivated'}`);
     wallMode = !wallMode;
     wallModeButton.textContent = `🛡️ Walls`;
     wallModeButton.classList.toggle('clicked', wallMode);
@@ -97,6 +98,7 @@ function toggleWallMode() {
 }
 
 function toggleAIMode() {
+    console.log(`AI mode ${!aiMode ? 'activated' : 'deactivated'}`);
     aiMode = !aiMode;
     aiModeButton.textContent = `🤖 Autoplay`;
     aiModeButton.classList.toggle('clicked', aiMode);
@@ -160,64 +162,92 @@ function handleGamepadInput() {
         let newDx = 0;
         let newDy = 0;
 
-        // Check D-pad
-        if (gamepad.buttons[12].pressed) newDy = -1; // Up
-        else if (gamepad.buttons[13].pressed) newDy = 1; // Down
-        else if (gamepad.buttons[14].pressed) newDx = -1; // Left
-        else if (gamepad.buttons[15].pressed) newDx = 1; // Right
-
-        // Process joysticks
-        const leftJoystickInput = processJoystickInput(gamepad.axes[0], gamepad.axes[1]);
-        const rightJoystickInput = processJoystickInput(gamepad.axes[2], gamepad.axes[3]);
-
-        if (leftJoystickInput.dx !== 0 || leftJoystickInput.dy !== 0) {
-            newDx = leftJoystickInput.dx;
-            newDy = leftJoystickInput.dy;
-        } else if (rightJoystickInput.dx !== 0 || rightJoystickInput.dy !== 0) {
-            newDx = rightJoystickInput.dx;
-            newDy = rightJoystickInput.dy;
+        // Get potential new direction from inputs
+        if (gamepad.buttons[12].pressed) {
+            newDy = -1; // Up
+            if (newDy !== dy) console.log('Gamepad: D-pad UP pressed');
+        } else if (gamepad.buttons[13].pressed) {
+            newDy = 1; // Down
+            if (newDy !== dy) console.log('Gamepad: D-pad DOWN pressed');
+        } else if (gamepad.buttons[14].pressed) {
+            newDx = -1; // Left
+            if (newDx !== dx) console.log('Gamepad: D-pad LEFT pressed');
+        } else if (gamepad.buttons[15].pressed) {
+            newDx = 1; // Right
+            if (newDx !== dx) console.log('Gamepad: D-pad RIGHT pressed');
         }
+        
+// Process joysticks only if D-pad isn't being used
+if (newDx === 0 && newDy === 0) {
+    const leftJoystickInput = processJoystickInput(gamepad.axes[0], gamepad.axes[1]);
+    const rightJoystickInput = processJoystickInput(gamepad.axes[2], gamepad.axes[3]);
 
-        // Handle movement
-        if ((newDx !== 0 || newDy !== 0) && 
-            (newDx !== lastDirectionChange.dx || newDy !== lastDirectionChange.dy) &&
-            (now - lastDirectionChange.timestamp > DIRECTION_CHANGE_THRESHOLD)) {
+    if (leftJoystickInput.dx !== 0 || leftJoystickInput.dy !== 0) {
+        newDx = leftJoystickInput.dx;
+        newDy = leftJoystickInput.dy;
+        if (newDx !== dx || newDy !== dy) {
+            let direction = '';
+            if (newDx === 1) direction = 'RIGHT';
+            else if (newDx === -1) direction = 'LEFT';
+            else if (newDy === -1) direction = 'UP';
+            else if (newDy === 1) direction = 'DOWN';
+            console.log(`Gamepad: Left stick moved ${direction}`);
+        }
+    } else if (rightJoystickInput.dx !== 0 || rightJoystickInput.dy !== 0) {
+        newDx = rightJoystickInput.dx;
+        newDy = rightJoystickInput.dy;
+        if (newDx !== dx || newDy !== dy) {
+            let direction = '';
+            if (newDx === 1) direction = 'RIGHT';
+            else if (newDx === -1) direction = 'LEFT';
+            else if (newDy === -1) direction = 'UP';
+            else if (newDy === 1) direction = 'DOWN';
+            console.log(`Gamepad: Right stick moved ${direction}`);
+        }
+    }
+}
+        // Process movement if direction changed
+        if ((newDx !== dx || newDy !== dy) && (newDx !== 0 || newDy !== 0)) {
             changeDirection(newDx, newDy);
             lastDirectionChange = { dx: newDx, dy: newDy, timestamp: now };
         }
 
-        // Handle buttons
         // L or ZL button - Toggle wall mode
         if ((gamepad.buttons[4].pressed && !gamepad.buttons[4].wasPressed) ||
             (gamepad.buttons[6].pressed && !gamepad.buttons[6].wasPressed)) {
+            console.log('Gamepad: L/ZL pressed');
             toggleWallMode();
         }
 
         // R or ZR button - Toggle autoplay
         if ((gamepad.buttons[5].pressed && !gamepad.buttons[5].wasPressed) ||
             (gamepad.buttons[7].pressed && !gamepad.buttons[7].wasPressed)) {
+            console.log('Gamepad: R/ZR pressed');
             toggleAIMode();
         }
 
-        // Minus or Plus button - Toggle pause
-        if ((gamepad.buttons[8].pressed && !gamepad.buttons[8].wasPressed) ||
-            (gamepad.buttons[9].pressed && !gamepad.buttons[9].wasPressed)) {
-            if (!gameOver) {
-                isPaused = !isPaused;
-                if (isPaused) {
-                    drawPauseScreen();
-                    pauseSound.play().catch(error => console.log("Audio playback failed:", error));
-                } else {
-                    unpauseSound.play().catch(error => console.log("Audio playback failed:", error));
-                }
-            }
+// Minus or Plus button - Toggle pause
+if ((gamepad.buttons[8].pressed && !gamepad.buttons[8].wasPressed) ||
+    (gamepad.buttons[9].pressed && !gamepad.buttons[9].wasPressed)) {
+    console.log('Gamepad: Minus/Plus pressed');
+    if (!gameOver) {
+        isPaused = !isPaused;
+        if (isPaused) {
+            console.log('Game paused via gamepad');
+            drawPauseScreen();
+            pauseSound.play().catch(error => console.log("Audio playback failed:", error));
+        } else {
+            console.log('Game unpaused via gamepad');
+            unpauseSound.play().catch(error => console.log("Audio playback failed:", error));
         }
-
+    }
+}
         // A, B, X, or Y button - Unpause or restart game
         if ((gamepad.buttons[0].pressed && !gamepad.buttons[0].wasPressed) ||
             (gamepad.buttons[1].pressed && !gamepad.buttons[1].wasPressed) ||
             (gamepad.buttons[2].pressed && !gamepad.buttons[2].wasPressed) ||
             (gamepad.buttons[3].pressed && !gamepad.buttons[3].wasPressed)) {
+            console.log('Gamepad: A/B/X/Y pressed');
             if (gameOver) {
                 initializeGame();
             } else if (isPaused) {
@@ -418,6 +448,14 @@ function changeDirection(newDx, newDy) {
         (newDy === 1 && dy === -1) || (newDy === -1 && dy === 1)) {
         return;
     }
+    
+    let direction = '';
+    if (newDx === 1) direction = 'RIGHT';
+    else if (newDx === -1) direction = 'LEFT';
+    else if (newDy === -1) direction = 'UP';
+    else if (newDy === 1) direction = 'DOWN';
+    
+    console.log(`Direction changed to: ${direction}`);
     dx = newDx;
     dy = newDy;
 }
@@ -443,72 +481,84 @@ function activateKey(keyIndex) {
 }
 
 function getGameSpeed() {
-    return Math.max(150 - (level - 1) * 5, 50);
+    return Math.max(180 - (level - 1) * 5, 50);
 }
 // Event listeners
 document.addEventListener('keydown', (e) => {
     if (gameOver && (e.code === 'Space' || e.key === 'Escape')) {
+        console.log('Game restarted via keyboard');
         initializeGame();
         return;
     }
 
     switch (e.key) {
         case 'ArrowUp':
+            console.log('Keyboard: UP arrow pressed');
             activateKey(1);
             changeDirection(0, -1);
             break;
         case 'ArrowDown':
+            console.log('Keyboard: DOWN arrow pressed');
             activateKey(2);
             changeDirection(0, 1);
             break;
         case 'ArrowLeft':
+            console.log('Keyboard: LEFT arrow pressed');
             activateKey(3);
             changeDirection(-1, 0);
             break;
         case 'ArrowRight':
+            console.log('Keyboard: RIGHT arrow pressed');
             activateKey(4);
             changeDirection(1, 0);
             break;
         case 'w':
         case 'W':
+            console.log('Keyboard: W pressed');
             activateKey(5);
             changeDirection(0, -1);
             break;
         case 's':
         case 'S':
+            console.log('Keyboard: S pressed');
             activateKey(6);
             changeDirection(0, 1);
             break;
         case 'a':
         case 'A':
+            console.log('Keyboard: A pressed');
             activateKey(7);
             changeDirection(-1, 0);
             break;
         case 'd':
         case 'D':
+            console.log('Keyboard: D pressed');
             activateKey(8);
             changeDirection(1, 0);
             break;
         case 'Enter':
+            console.log('Keyboard: Enter pressed - toggling AI mode');
             toggleAIMode();
             break;
         case 'Shift':
             if (e.location === KeyboardEvent.DOM_KEY_LOCATION_LEFT) {
+                console.log('Keyboard: Left Shift pressed - toggling wall mode');
                 toggleWallMode();
             }
             break;
-        case 'Escape':
-            if (!gameOver) {
-                isPaused = !isPaused;
-                if (isPaused) {
-                    pauseSound.play().catch(error => console.log("Audio playback failed:", error));
-                    drawPauseScreen();
-                } else {
-                    unpauseSound.play().catch(error => console.log("Audio playback failed:", error));
+            case 'Escape':
+                if (!gameOver) {
+                    isPaused = !isPaused;
+                    if (isPaused) {
+                        console.log('Game paused via Esc key');
+                        pauseSound.play().catch(error => console.log("Audio playback failed:", error));
+                        drawPauseScreen();
+                    } else {
+                        console.log('Game unpaused via Esc key');
+                        unpauseSound.play().catch(error => console.log("Audio playback failed:", error));
+                    }
                 }
-            }
-            break;
-    }
+                break;    }
 });
 
 // Mouse/touch event listeners
@@ -558,8 +608,12 @@ resizeCanvas();
 window.addEventListener('resize', resizeCanvas);
 initGamepad();
 
-function gameLoop() {
+function gamepadInputLoop() {
     handleGamepadInput();
+    setTimeout(gamepadInputLoop, 16); // Check inputs every 16ms (approximately 60 times per second)
+}
+
+function gameLoop() {
     checkGamepadActivity();
     if (!isPaused) {
         drawGame();
@@ -579,3 +633,4 @@ document.addEventListener('DOMContentLoaded', updateVersionInfo);
 
 initializeGame();
 gameLoop();
+gamepadInputLoop();
