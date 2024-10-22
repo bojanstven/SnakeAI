@@ -162,3 +162,9 @@ body {
     color: rgb(40, 33, 16);
 }
 
+.material-icons.trophy {
+    font-size: 38px;
+    vertical-align: middle;
+    padding-bottom: 0px;
+    color: rgb(126, 248, 143);
+}
