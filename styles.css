@@ -154,3 +154,11 @@ body {
 .snake-tail {
     background-color: rgba(0, 0, 0, 0.4);
 }
+
+.material-icons {
+    font-size: 16px;
+    vertical-align: middle;
+    padding-bottom: 0px;
+    color: rgb(40, 33, 16);
+}
+

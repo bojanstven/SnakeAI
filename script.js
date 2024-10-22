@@ -7,7 +7,7 @@ const highScoreElement = document.getElementById('high-score-value');
 const wallModeButton = document.getElementById('wall-mode');
 const aiModeButton = document.getElementById('ai-mode');
 const gameAreaContainer = document.getElementById('game-area-container');
-const version = 'v2.6.1'; // soundPlay added to console log
+const version = 'v2.7'; // Google Fonts Material Icons
 
 // Audio elements
 const pauseSound = document.getElementById('pauseSound');
@@ -84,9 +84,9 @@ function generateFood() {
 }
 
 function toggleWallMode() {
-    console.log(`Wall mode ${!wallMode ? 'activated' : 'deactivated'}`);
+    console.log(`🐍 Wall mode ${!wallMode ? 'activated' : 'deactivated'}`);
     wallMode = !wallMode;
-    wallModeButton.textContent = '🛡️ Walls';
+    wallModeButton.innerHTML = '<i class="material-icons">security</i> Walls';
     wallModeButton.classList.toggle('clicked', wallMode);
     gameAreaContainer.classList.toggle('walls-on', wallMode);
     
@@ -97,9 +97,9 @@ function toggleWallMode() {
 }
 
 function toggleAIMode() {
-    console.log(`AI mode ${!aiMode ? 'activated' : 'deactivated'}`);
+    console.log(`🐍 AI mode ${!aiMode ? 'activated' : 'deactivated'}`);
     aiMode = !aiMode;
-    aiModeButton.textContent = '🤖 Autoplay';
+    aiModeButton.innerHTML = '<i class="material-icons">rocket_launch</i> Autoplay';
     aiModeButton.classList.toggle('clicked', aiMode);
     
     // Play appropriate sound based on AI mode state
@@ -162,16 +162,16 @@ function handleGamepadInput() {
         // Get potential new direction from inputs
         if (gamepad.buttons[12].pressed) {
             newDy = -1; // Up
-            if (newDy !== dy) console.log('Gamepad: D-pad UP pressed');
+            if (newDy !== dy) console.log('🎮 Gamepad: D-pad UP pressed');
         } else if (gamepad.buttons[13].pressed) {
             newDy = 1; // Down
-            if (newDy !== dy) console.log('Gamepad: D-pad DOWN pressed');
+            if (newDy !== dy) console.log('🎮 Gamepad: D-pad DOWN pressed');
         } else if (gamepad.buttons[14].pressed) {
             newDx = -1; // Left
-            if (newDx !== dx) console.log('Gamepad: D-pad LEFT pressed');
+            if (newDx !== dx) console.log('🎮 Gamepad: D-pad LEFT pressed');
         } else if (gamepad.buttons[15].pressed) {
             newDx = 1; // Right
-            if (newDx !== dx) console.log('Gamepad: D-pad RIGHT pressed');
+            if (newDx !== dx) console.log('🎮 Gamepad: D-pad RIGHT pressed');
         }
         
 // Process joysticks only if D-pad isn't being used
@@ -212,29 +212,29 @@ if (newDx === 0 && newDy === 0) {
         // L or ZL button - Toggle wall mode
         if ((gamepad.buttons[4].pressed && !gamepad.buttons[4].wasPressed) ||
             (gamepad.buttons[6].pressed && !gamepad.buttons[6].wasPressed)) {
-            console.log('Gamepad: L/ZL pressed');
+            console.log('🎮 Gamepad: L/ZL pressed');
             toggleWallMode();
         }
 
         // R or ZR button - Toggle autoplay
         if ((gamepad.buttons[5].pressed && !gamepad.buttons[5].wasPressed) ||
             (gamepad.buttons[7].pressed && !gamepad.buttons[7].wasPressed)) {
-            console.log('Gamepad: R/ZR pressed');
+            console.log('🎮 Gamepad: R/ZR pressed');
             toggleAIMode();
         }
 
 // Minus or Plus button - Toggle pause
 if ((gamepad.buttons[8].pressed && !gamepad.buttons[8].wasPressed) ||
     (gamepad.buttons[9].pressed && !gamepad.buttons[9].wasPressed)) {
-    console.log('Gamepad: Minus/Plus pressed');
+    console.log('🎮 Gamepad: Minus/Plus pressed');
     if (!gameOver) {
         isPaused = !isPaused;
         if (isPaused) {
-            console.log('Game paused via gamepad');
+            console.log('🐍 Game paused via gamepad');
             drawPauseScreen();
             pauseSound.play().catch(error => console.log("Audio playback failed:", error));
         } else {
-            console.log('Game unpaused via gamepad');
+            console.log('🐍 Game unpaused via gamepad');
             unpauseSound.play().catch(error => console.log("Audio playback failed:", error));
         }
     }
@@ -244,7 +244,7 @@ if ((gamepad.buttons[8].pressed && !gamepad.buttons[8].wasPressed) ||
             (gamepad.buttons[1].pressed && !gamepad.buttons[1].wasPressed) ||
             (gamepad.buttons[2].pressed && !gamepad.buttons[2].wasPressed) ||
             (gamepad.buttons[3].pressed && !gamepad.buttons[3].wasPressed)) {
-            console.log('Gamepad: A/B/X/Y pressed');
+            console.log('🎮 Gamepad: A/B/X/Y pressed');
             if (gameOver) {
                 initializeGame();
             } else if (isPaused) {
@@ -343,14 +343,18 @@ function moveSnake() {
     }
 }
 
+// Check wall collision
 function checkCollision() {
     const head = snake[0];
     if (wallMode && (head.x < 0 || head.x >= tileCount || head.y < 0 || head.y >= tileCount)) {
+        console.log('🐍 Snake hit wall');
         gameOver = true;
     }
 
-    for (let i = 1; i < snake.length; i++) {
+    // Check self collision - possible at length 4 and above
+    for (let i = 3; i < snake.length; i++) {
         if (head.x === snake[i].x && head.y === snake[i].y) {
+            console.log('🐍 Snake hit itself');
             gameOver = true;
             break;
         }
@@ -457,7 +461,7 @@ function changeDirection(newDx, newDy) {
     else if (newDy === -1) direction = 'UP';
     else if (newDy === 1) direction = 'DOWN';
     
-    console.log(`Direction changed to: ${direction}`);
+    console.log(`🐍 Direction changed to: ${direction}`);
     dx = newDx;
     dy = newDy;
 }
@@ -488,70 +492,70 @@ function getGameSpeed() {
 // Event listeners
 document.addEventListener('keydown', (e) => {
     if (gameOver && (e.code === 'Space' || e.key === 'Escape')) {
-        console.log('Game restarted via keyboard');
+        console.log('🐍 Game restarted via keyboard');
         initializeGame();
         return;
     }
 
     switch (e.key) {
         case 'ArrowUp':
-            console.log('Keyboard: UP arrow pressed');
+            console.log('↗️ Keyboard: UP arrow pressed');
             activateKey(1);
             changeDirection(0, -1);
             break;
         case 'ArrowDown':
-            console.log('Keyboard: DOWN arrow pressed');
+            console.log('↗️ Keyboard: DOWN arrow pressed');
             activateKey(2);
             changeDirection(0, 1);
             break;
         case 'ArrowLeft':
-            console.log('Keyboard: LEFT arrow pressed');
+            console.log('↗️ Keyboard: LEFT arrow pressed');
             activateKey(3);
             changeDirection(-1, 0);
             break;
         case 'ArrowRight':
-            console.log('Keyboard: RIGHT arrow pressed');
+            console.log('↗️ Keyboard: RIGHT arrow pressed');
             activateKey(4);
             changeDirection(1, 0);
             break;
         case 'w':
         case 'W':
-            console.log('Keyboard: W pressed');
+            console.log('🔠 Keyboard: W pressed');
             activateKey(5);
             changeDirection(0, -1);
             break;
         case 's':
         case 'S':
-            console.log('Keyboard: S pressed');
+            console.log('🔠 Keyboard: S pressed');
             activateKey(6);
             changeDirection(0, 1);
             break;
         case 'a':
         case 'A':
-            console.log('Keyboard: A pressed');
+            console.log('🔠 Keyboard: A pressed');
             activateKey(7);
             changeDirection(-1, 0);
             break;
         case 'd':
         case 'D':
-            console.log('Keyboard: D pressed');
+            console.log('🔠 Keyboard: D pressed');
             activateKey(8);
             changeDirection(1, 0);
             break;
         case 'Enter':
-            console.log('Keyboard: Enter pressed - toggling AI mode');
+            console.log('🔠 Keyboard: Enter pressed - toggling AI mode');
             toggleAIMode();
             break;
         case 'Shift':
             if (e.location === KeyboardEvent.DOM_KEY_LOCATION_LEFT) {
-                console.log('Keyboard: Left Shift pressed - toggling wall mode');
+                console.log('🔠 Keyboard: Left Shift pressed - toggling wall mode');
                 toggleWallMode();
             }
             break;
             case 'Escape':
                  if (!gameOver) {
                  isPaused = !isPaused;
-                 console.log(`Game ${isPaused ? 'paused' : 'unpaused'} via Esc key`);
+                 console.log(`🐍 Game ${isPaused ? 'paused' : 'unpaused'} via Esc key`);
                  (isPaused ? pauseSound : unpauseSound).play()
                      .then(() => console.log(`🔊 Sound Game ${isPaused ? 'pause' : 'unpause'}`))
                      .catch(error => console.log('🔇 Sound Game pause sound failed:', error));
