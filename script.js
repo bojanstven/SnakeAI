@@ -7,7 +7,7 @@ const highScoreElement = document.getElementById('high-score-value');
 const wallModeButton = document.getElementById('wall-mode');
 const aiModeButton = document.getElementById('ai-mode');
 const gameAreaContainer = document.getElementById('game-area-container');
-const version = 'v2.7'; // Google Fonts Material Icons
+const version = 'v2.8'; // touch console logging
 
 // Audio elements
 const pauseSound = document.getElementById('pauseSound');
@@ -572,6 +572,7 @@ canvas.addEventListener('touchstart', (e) => {
     touchStartX = e.touches[0].clientX;
     touchStartY = e.touches[0].clientY;
     if (gameOver) {
+        console.log('👆 Touch to restart game');
         initializeGame();
     }
 }, false);
@@ -591,16 +592,20 @@ canvas.addEventListener('touchend', (e) => {
     }
     if (aiMode) return;
 
-    let touchEndX = e.changedTouches[0].clientX;
-    let touchEndY = e.changedTouches[0].clientY;
+    const touchEndX = e.changedTouches[0].clientX;
+    const touchEndY = e.changedTouches[0].clientY;
 
-    let dx = touchEndX - touchStartX;
-    let dy = touchEndY - touchStartY;
+    const dx = touchEndX - touchStartX;
+    const dy = touchEndY - touchStartY;
 
     if (Math.abs(dx) > Math.abs(dy)) {
+        const direction = dx > 0 ? 'RIGHT' : 'LEFT';
+        console.log(`👆 Swipe ${direction} detected`);
         changeDirection(dx > 0 ? 1 : -1, 0);
         activateKey(dx > 0 ? 4 : 3);
     } else {
+        const direction = dy > 0 ? 'DOWN' : 'UP';
+        console.log(`👆 Swipe ${direction} detected`);
         changeDirection(0, dy > 0 ? 1 : -1);
         activateKey(dy > 0 ? 2 : 1);
     }
