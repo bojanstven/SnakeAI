@@ -6,17 +6,20 @@ const highScoreElement = document.getElementById('high-score-value');
 const wallModeButton = document.getElementById('wall-mode');
 const aiModeButton = document.getElementById('ai-mode');
 const gameAreaContainer = document.getElementById('game-area-container');
-const version = 'v2.4'; // autoPlay and wallMode sound effects added
+const version = 'v2.5'; // gamepad merged into script.js
 
+// Audio elements
 const pauseSound = document.getElementById('pauseSound');
 const unpauseSound = document.getElementById('unpauseSound');
 const wallOnSound = document.getElementById('wallOnSound');
 const wallOffSound = document.getElementById('wallOffSound');
-const eatSound = document.getElementById('eatSound');
-const gameOverSound = document.getElementById('gameOverSound');
 const autoplayOnSound = document.getElementById('autoplayOnSound');
 const autoplayOffSound = document.getElementById('autoplayOffSound');
+const eatSound = document.getElementById('eatSound');
+const gameOverSound = document.getElementById('gameOverSound');
+const gamepadSound = document.getElementById('gamepadSound');
 
+// Game state variables
 const gridSize = 20;
 const tileCount = 18;
 let snake;
@@ -29,21 +32,26 @@ let wallMode = false;
 let aiMode = false;
 let gameOver = false;
 let highScore = 0;
-
-let touchStartX = 0;
-let touchStartY = 0;
-
 let isPaused = false;
 let gameOverSoundPlayed = false;
+
+// Gamepad variables
+let gamepadActive = false;
+let lastGamepadActivity = 0;
+const INACTIVITY_TIMEOUT = 60000; // 1 minute in milliseconds
+let lastDirectionChange = { dx: 0, dy: 0, timestamp: 0 };
+const DIRECTION_CHANGE_THRESHOLD = 30; // Minimum time (ms) between direction changes
+const JOYSTICK_THRESHOLD = 0.5; // Threshold for joystick input
+
+// Touch variables
+let touchStartX = 0;
+let touchStartY = 0;
 
 function resizeCanvas() {
     const container = canvas.parentElement;
     canvas.width = container.offsetWidth;
     canvas.height = container.offsetHeight;
 }
-
-resizeCanvas();
-window.addEventListener('resize', resizeCanvas);
 
 function initializeGame() {
     const startX = Math.floor(Math.random() * tileCount);
@@ -74,6 +82,177 @@ function generateFood() {
     } while (snake.some(segment => segment.x === food.x && segment.y === food.y));
 }
 
+function toggleWallMode() {
+    wallMode = !wallMode;
+    wallModeButton.textContent = `🛡️ Walls`;
+    wallModeButton.classList.toggle('clicked', wallMode);
+    gameAreaContainer.classList.toggle('walls-on', wallMode);
+    
+    // Play appropriate sound
+    if (wallMode) {
+        wallOnSound.play().catch(error => console.log("Audio playback failed:", error));
+    } else {
+        wallOffSound.play().catch(error => console.log("Audio playback failed:", error));
+    }
+}
+
+function toggleAIMode() {
+    aiMode = !aiMode;
+    aiModeButton.textContent = `🤖 Autoplay`;
+    aiModeButton.classList.toggle('clicked', aiMode);
+    
+    // Play appropriate sound
+    if (aiMode) {
+        autoplayOnSound.play().catch(error => console.log("Audio playback failed:", error));
+    } else {
+        autoplayOffSound.play().catch(error => console.log("Audio playback failed:", error));
+    }
+}
+
+// Gamepad initialization and handling
+function initGamepad() {
+    window.addEventListener("gamepadconnected", (e) => {
+        console.log("Gamepad connected:", e.gamepad.id);
+        gamepadActive = true;
+        pressGamepadButton();
+        gamepadSound.play().catch(error => console.log("Audio playback failed:", error));
+    });
+
+    window.addEventListener("gamepaddisconnected", (e) => {
+        console.log("Gamepad disconnected:", e.gamepad.id);
+        gamepadActive = false;
+        unpressGamepadButton();
+    });
+}
+
+function pressGamepadButton() {
+    const gamepadModeButton = document.getElementById('gamepad-mode');
+    if (gamepadModeButton) {
+        gamepadModeButton.classList.add('clicked');
+        lastGamepadActivity = Date.now();
+    }
+}
+
+function unpressGamepadButton() {
+    const gamepadModeButton = document.getElementById('gamepad-mode');
+    if (gamepadModeButton) {
+        gamepadModeButton.classList.remove('clicked');
+    }
+}
+
+function checkGamepadActivity() {
+    const now = Date.now();
+    if (gamepadActive && now - lastGamepadActivity > INACTIVITY_TIMEOUT) {
+        unpressGamepadButton();
+    } else if (now - lastGamepadActivity <= INACTIVITY_TIMEOUT) {
+        pressGamepadButton();
+    }
+}
+
+function handleGamepadInput() {
+    const gamepads = navigator.getGamepads();
+    if (!gamepads) return;
+
+    for (const gamepad of gamepads) {
+        if (!gamepad) continue;
+
+        const now = Date.now();
+        let newDx = 0;
+        let newDy = 0;
+
+        // Check D-pad
+        if (gamepad.buttons[12].pressed) newDy = -1; // Up
+        else if (gamepad.buttons[13].pressed) newDy = 1; // Down
+        else if (gamepad.buttons[14].pressed) newDx = -1; // Left
+        else if (gamepad.buttons[15].pressed) newDx = 1; // Right
+
+        // Process joysticks
+        const leftJoystickInput = processJoystickInput(gamepad.axes[0], gamepad.axes[1]);
+        const rightJoystickInput = processJoystickInput(gamepad.axes[2], gamepad.axes[3]);
+
+        if (leftJoystickInput.dx !== 0 || leftJoystickInput.dy !== 0) {
+            newDx = leftJoystickInput.dx;
+            newDy = leftJoystickInput.dy;
+        } else if (rightJoystickInput.dx !== 0 || rightJoystickInput.dy !== 0) {
+            newDx = rightJoystickInput.dx;
+            newDy = rightJoystickInput.dy;
+        }
+
+        // Handle movement
+        if ((newDx !== 0 || newDy !== 0) && 
+            (newDx !== lastDirectionChange.dx || newDy !== lastDirectionChange.dy) &&
+            (now - lastDirectionChange.timestamp > DIRECTION_CHANGE_THRESHOLD)) {
+            changeDirection(newDx, newDy);
+            lastDirectionChange = { dx: newDx, dy: newDy, timestamp: now };
+        }
+
+        // Handle buttons
+        // L or ZL button - Toggle wall mode
+        if ((gamepad.buttons[4].pressed && !gamepad.buttons[4].wasPressed) ||
+            (gamepad.buttons[6].pressed && !gamepad.buttons[6].wasPressed)) {
+            toggleWallMode();
+        }
+
+        // R or ZR button - Toggle autoplay
+        if ((gamepad.buttons[5].pressed && !gamepad.buttons[5].wasPressed) ||
+            (gamepad.buttons[7].pressed && !gamepad.buttons[7].wasPressed)) {
+            toggleAIMode();
+        }
+
+        // Minus or Plus button - Toggle pause
+        if ((gamepad.buttons[8].pressed && !gamepad.buttons[8].wasPressed) ||
+            (gamepad.buttons[9].pressed && !gamepad.buttons[9].wasPressed)) {
+            if (!gameOver) {
+                isPaused = !isPaused;
+                if (isPaused) {
+                    drawPauseScreen();
+                    pauseSound.play().catch(error => console.log("Audio playback failed:", error));
+                } else {
+                    unpauseSound.play().catch(error => console.log("Audio playback failed:", error));
+                }
+            }
+        }
+
+        // A, B, X, or Y button - Unpause or restart game
+        if ((gamepad.buttons[0].pressed && !gamepad.buttons[0].wasPressed) ||
+            (gamepad.buttons[1].pressed && !gamepad.buttons[1].wasPressed) ||
+            (gamepad.buttons[2].pressed && !gamepad.buttons[2].wasPressed) ||
+            (gamepad.buttons[3].pressed && !gamepad.buttons[3].wasPressed)) {
+            if (gameOver) {
+                initializeGame();
+            } else if (isPaused) {
+                isPaused = false;
+                unpauseSound.play().catch(error => console.log("Audio playback failed:", error));
+            }
+        }
+
+        // Update button states
+        gamepad.buttons.forEach((button, index) => {
+            button.wasPressed = button.pressed;
+        });
+
+        // Update activity status
+        if (gamepad.buttons.some(button => button.pressed) || 
+            gamepad.axes.some(axis => Math.abs(axis) > 0.1)) {
+            gamepadActive = true;
+            lastGamepadActivity = now;
+            pressGamepadButton();
+        }
+    }
+}
+
+function processJoystickInput(x, y) {
+    if (Math.abs(x) > Math.abs(y)) {
+        if (x < -JOYSTICK_THRESHOLD) return { dx: -1, dy: 0 };
+        else if (x > JOYSTICK_THRESHOLD) return { dx: 1, dy: 0 };
+    } else {
+        if (y < -JOYSTICK_THRESHOLD) return { dx: 0, dy: -1 };
+        else if (y > JOYSTICK_THRESHOLD) return { dx: 0, dy: 1 };
+    }
+    return { dx: 0, dy: 0 };
+}
+
+// Game rendering functions
 function drawGame() {
     clearCanvas();
     if (gameOver) {
@@ -243,31 +422,30 @@ function changeDirection(newDx, newDy) {
     dy = newDy;
 }
 
-function toggleWallMode() {
-    wallMode = !wallMode;
-    wallModeButton.textContent = `🛡️ Walls`;
-    wallModeButton.classList.toggle('clicked', wallMode);
-    gameAreaContainer.classList.toggle('walls-on', wallMode);
-    
-    if (wallMode) {
-        wallOnSound.play().catch(error => console.log("Audio playback failed:", error));
-    } else {
-        wallOffSound.play().catch(error => console.log("Audio playback failed:", error));
+function drawPauseScreen() {
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = 'white';
+    ctx.font = `${canvas.width / 15}px Roboto`;
+    ctx.textAlign = 'center';
+    ctx.fillText('Paused', canvas.width / 2, canvas.height / 2 - canvas.width / 15);
+    ctx.fillText(`Score: ${score}`, canvas.width / 2, canvas.height / 2 + canvas.width / 30);
+    ctx.font = `${canvas.width / 25}px Roboto`;
+    ctx.fillText('Tap or Press Esc to Continue', canvas.width / 2, canvas.height / 2 + canvas.width / 10);
+}
+
+function activateKey(keyIndex) {
+    const keyElement = document.querySelector(`.key:nth-child(${keyIndex})`);
+    if (keyElement) {
+        keyElement.classList.add('active');
+        setTimeout(() => keyElement.classList.remove('active'), 200);
     }
 }
 
-function toggleAIMode() {
-    aiMode = !aiMode;
-    aiModeButton.textContent = `🤖 Autoplay`;
-    aiModeButton.classList.toggle('clicked', aiMode);
-    
-    if (aiMode) {
-        autoplayOnSound.play().catch(error => console.log("Audio playback failed:", error));
-    } else {
-        autoplayOffSound.play().catch(error => console.log("Audio playback failed:", error));
-    }
+function getGameSpeed() {
+    return Math.max(150 - (level - 1) * 5, 50);
 }
-
+// Event listeners
 document.addEventListener('keydown', (e) => {
     if (gameOver && (e.code === 'Space' || e.key === 'Escape')) {
         initializeGame();
@@ -333,6 +511,10 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
+// Mouse/touch event listeners
+wallModeButton.addEventListener('click', toggleWallMode);
+aiModeButton.addEventListener('click', toggleAIMode);
+
 canvas.addEventListener('touchstart', (e) => {
     touchStartX = e.touches[0].clientX;
     touchStartY = e.touches[0].clientY;
@@ -369,36 +551,16 @@ canvas.addEventListener('touchend', (e) => {
         changeDirection(0, dy > 0 ? 1 : -1);
         activateKey(dy > 0 ? 2 : 1);
     }
-});
+}, false);
 
-wallModeButton.addEventListener('click', toggleWallMode);
-aiModeButton.addEventListener('click', toggleAIMode);
-
-function activateKey(keyIndex) {
-    const keyElement = document.querySelector(`.key:nth-child(${keyIndex})`);
-    if (keyElement) {
-        keyElement.classList.add('active');
-        setTimeout(() => keyElement.classList.remove('active'), 200);
-    }
-}
-
-function drawPauseScreen() {
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = 'white';
-    ctx.font = `${canvas.width / 15}px Roboto`;
-    ctx.textAlign = 'center';
-    ctx.fillText('Paused', canvas.width / 2, canvas.height / 2 - canvas.width / 15);
-    ctx.fillText(`Score: ${score}`, canvas.width / 2, canvas.height / 2 + canvas.width / 30);
-    ctx.font = `${canvas.width / 25}px Roboto`;
-    ctx.fillText('Tap or Press Esc to Continue', canvas.width / 2, canvas.height / 2 + canvas.width / 10);
-}
-
-function getGameSpeed() {
-    return Math.max(150 - (level - 1) * 5, 50);
-}
+// Initialization
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+initGamepad();
 
 function gameLoop() {
+    handleGamepadInput();
+    checkGamepadActivity();
     if (!isPaused) {
         drawGame();
     }
