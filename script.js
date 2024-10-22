@@ -1,3 +1,4 @@
+// Canvas and game elements
 const canvas = document.getElementById('game-area');
 const ctx = canvas.getContext('2d');
 const scoreElement = document.getElementById('score');
@@ -6,7 +7,7 @@ const highScoreElement = document.getElementById('high-score-value');
 const wallModeButton = document.getElementById('wall-mode');
 const aiModeButton = document.getElementById('ai-mode');
 const gameAreaContainer = document.getElementById('game-area-container');
-const version = 'v2.6'; // smooth play on gamepad
+const version = 'v2.6.1'; // soundPlay added to console log
 
 // Audio elements
 const pauseSound = document.getElementById('pauseSound');
@@ -85,30 +86,26 @@ function generateFood() {
 function toggleWallMode() {
     console.log(`Wall mode ${!wallMode ? 'activated' : 'deactivated'}`);
     wallMode = !wallMode;
-    wallModeButton.textContent = `🛡️ Walls`;
+    wallModeButton.textContent = '🛡️ Walls';
     wallModeButton.classList.toggle('clicked', wallMode);
     gameAreaContainer.classList.toggle('walls-on', wallMode);
     
-    // Play appropriate sound
-    if (wallMode) {
-        wallOnSound.play().catch(error => console.log("Audio playback failed:", error));
-    } else {
-        wallOffSound.play().catch(error => console.log("Audio playback failed:", error));
-    }
+    // Play appropriate sound based on wall mode state
+    (wallMode ? wallOnSound : wallOffSound).play()
+        .then(() => console.log(`🔊 Sound Wall mode ${wallMode ? 'on' : 'off'}`))
+        .catch(error => console.log('🔇 Sound Wall mode sound failed:', error));
 }
 
 function toggleAIMode() {
     console.log(`AI mode ${!aiMode ? 'activated' : 'deactivated'}`);
     aiMode = !aiMode;
-    aiModeButton.textContent = `🤖 Autoplay`;
+    aiModeButton.textContent = '🤖 Autoplay';
     aiModeButton.classList.toggle('clicked', aiMode);
     
-    // Play appropriate sound
-    if (aiMode) {
-        autoplayOnSound.play().catch(error => console.log("Audio playback failed:", error));
-    } else {
-        autoplayOffSound.play().catch(error => console.log("Audio playback failed:", error));
-    }
+    // Play appropriate sound based on AI mode state
+    (aiMode ? autoplayOnSound : autoplayOffSound).play()
+        .then(() => console.log(`🔊 Sound AI mode ${aiMode ? 'on' : 'off'}`))
+        .catch(error => console.log('🔇 Sound AI mode sound failed:', error));
 }
 
 // Gamepad initialization and handling
@@ -337,7 +334,10 @@ function moveSnake() {
         generateFood();
         
         eatSound.currentTime = 0;
-        eatSound.play().catch(error => console.log("Audio playback failed:", error));
+        eatSound.play()
+        .then(() => console.log('🔊 Sound Food eaten'))
+        .catch(error => console.log('🔇 Sound Food eaten sound failed:', error));
+
     } else {
         snake.pop();
     }
@@ -363,7 +363,9 @@ function checkCollision() {
 
 function drawGameOver() {
     if (!gameOverSoundPlayed) {
-        gameOverSound.play().catch(error => console.log("Audio playback failed:", error));
+        gameOverSound.play()
+            .then(() => console.log('🔊 Sound Game over'))
+            .catch(error => console.log('🔇 Sound Game over sound failed:', error));
         gameOverSoundPlayed = true;
     }
 
@@ -547,16 +549,13 @@ document.addEventListener('keydown', (e) => {
             }
             break;
             case 'Escape':
-                if (!gameOver) {
-                    isPaused = !isPaused;
-                    if (isPaused) {
-                        console.log('Game paused via Esc key');
-                        pauseSound.play().catch(error => console.log("Audio playback failed:", error));
-                        drawPauseScreen();
-                    } else {
-                        console.log('Game unpaused via Esc key');
-                        unpauseSound.play().catch(error => console.log("Audio playback failed:", error));
-                    }
+                 if (!gameOver) {
+                 isPaused = !isPaused;
+                 console.log(`Game ${isPaused ? 'paused' : 'unpaused'} via Esc key`);
+                 (isPaused ? pauseSound : unpauseSound).play()
+                     .then(() => console.log(`🔊 Sound Game ${isPaused ? 'pause' : 'unpause'}`))
+                     .catch(error => console.log('🔇 Sound Game pause sound failed:', error));
+                         isPaused && drawPauseScreen();
                 }
                 break;    }
 });
