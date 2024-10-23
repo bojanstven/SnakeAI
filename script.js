@@ -7,7 +7,7 @@ const highScoreElement = document.getElementById('high-score-value');
 const wallModeButton = document.getElementById('wall-mode');
 const aiModeButton = document.getElementById('ai-mode');
 const gameAreaContainer = document.getElementById('game-area-container');
-const version = 'v2.8.2'; // Fonts locally, no layout shift and FOUT
+const version = 'v2.9'; // Shadow for 3D effect, snake head
 
 // Audio elements
 const pauseSound = document.getElementById('pauseSound');
@@ -306,18 +306,81 @@ function clearCanvas() {
 
 function drawSnake() {
     const segmentSize = canvas.width / tileCount;
-    ctx.fillStyle = 'black';
-    snake.forEach(segment => {
-        ctx.fillRect(segment.x * segmentSize, segment.y * segmentSize, segmentSize - 1, segmentSize - 1);
+    const bodyCutPercentage = 0.09;
+    const shadowOffset = 5;
+    const headCurveRadius = segmentSize * 0.99;  // 30% curve radius
+    
+    snake.forEach((segment, index) => {
+        if (index === 0) {  // Head
+            const x = segment.x * segmentSize;
+            const y = segment.y * segmentSize;
+            const size = segmentSize - 1;
+            let radii;
+ 
+            // Determine corner radii based on direction
+            if (dx === 1) {  // Right
+                radii = [0, headCurveRadius, headCurveRadius, 0];
+            } else if (dx === -1) {  // Left
+                radii = [headCurveRadius, 0, 0, headCurveRadius];
+            } else if (dy === -1) {  // Up
+                radii = [headCurveRadius, headCurveRadius, 0, 0];
+            } else {  // Down
+                radii = [0, 0, headCurveRadius, headCurveRadius];
+            }
+ 
+            // Draw shadow
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+            ctx.beginPath();
+            ctx.roundRect(x + shadowOffset, y + shadowOffset, size, size, radii);
+            ctx.fill();
+ 
+            // Draw head
+            ctx.fillStyle = '#000000';
+            ctx.beginPath();
+            ctx.roundRect(x, y, size, size, radii);
+            ctx.fill();
+ 
+        } else {  // Body and tail
+            const cut = segmentSize * bodyCutPercentage;
+            const offset = cut / 2;
+            const x = segment.x * segmentSize + offset;
+            const y = segment.y * segmentSize + offset;
+            const size = segmentSize - cut - 1;
+            
+            // Draw shadow
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+            ctx.fillRect(x + shadowOffset, y + shadowOffset, size, size);
+            
+            // Draw segment
+            ctx.fillStyle = '#262626';
+            ctx.fillRect(x, y, size, size);
+        }
     });
-}
+ }
 
-function drawFood() {
+
+ function drawFood() {
     const segmentSize = canvas.width / tileCount;
+    const shadowOffset = 5;  // Same as snake shadow
+    
+    // Draw shadow
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';  // Same shadow opacity as snake
+    ctx.fillRect(
+        food.x * segmentSize + shadowOffset, 
+        food.y * segmentSize + shadowOffset, 
+        segmentSize - 1, 
+        segmentSize - 1
+    );
+    
+    // Draw food
     ctx.fillStyle = 'red';
-    ctx.fillRect(food.x * segmentSize, food.y * segmentSize, segmentSize - 1, segmentSize - 1);
+    ctx.fillRect(
+        food.x * segmentSize, 
+        food.y * segmentSize, 
+        segmentSize - 1, 
+        segmentSize - 1
+    );
 }
-
 function moveSnake() {
     const head = {x: snake[0].x + dx, y: snake[0].y + dy};
     

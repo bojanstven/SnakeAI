@@ -163,24 +163,6 @@ body {
     flex-shrink: 0; /* Prevent image from shrinking */
 }
 
-/* Snake gradient styles */
-.snake-segment {
-    position: absolute;
-    border-radius: 50%;
-    transition: all 0.1s linear;
-}
-.snake-head {
-    background-color: #000000;
-    z-index: 2;
-}
-.snake-body {
-    background-color: rgba(0, 0, 0, 0.8);
-    z-index: 1;
-}
-.snake-tail {
-    background-color: rgba(0, 0, 0, 0.4);
-}
-
 .material-icons {
     font-family: 'Material Icons';
     font-weight: normal;
