@@ -7,7 +7,7 @@ const highScoreElement = document.getElementById('high-score-value');
 const wallModeButton = document.getElementById('wall-mode');
 const aiModeButton = document.getElementById('ai-mode');
 const gameAreaContainer = document.getElementById('game-area-container');
-const version = 'v2.9.1'; // Focus/tab prevention added
+const version = 'v3.0'; // Gamepad VIBRATION added
 
 // Audio elements
 const pauseSound = document.getElementById('pauseSound');
@@ -199,7 +199,7 @@ if (newDx === 0 && newDy === 0) {
             else if (newDx === -1) direction = 'LEFT';
             else if (newDy === -1) direction = 'UP';
             else if (newDy === 1) direction = 'DOWN';
-            console.log(`Gamepad: Right stick moved ${direction}`);
+            console.log(`🎮 Gamepad: Right stick moved ${direction}`);
         }
     }
 }
@@ -231,28 +231,36 @@ if ((gamepad.buttons[8].pressed && !gamepad.buttons[8].wasPressed) ||
         isPaused = !isPaused;
         if (isPaused) {
             console.log('🐍 Game paused via gamepad');
+            console.log('🔊 Sound Game pause');
             drawPauseScreen();
             pauseSound.play().catch(error => console.log("Audio playback failed:", error));
         } else {
             console.log('🐍 Game unpaused via gamepad');
+            console.log('🔊 Sound Game unpause');
             unpauseSound.play().catch(error => console.log("Audio playback failed:", error));
         }
+        vibrateOnPauseToggle(gamepad);
     }
 }
-        // A, B, X, or Y button - Unpause or restart game
-        if ((gamepad.buttons[0].pressed && !gamepad.buttons[0].wasPressed) ||
-            (gamepad.buttons[1].pressed && !gamepad.buttons[1].wasPressed) ||
-            (gamepad.buttons[2].pressed && !gamepad.buttons[2].wasPressed) ||
-            (gamepad.buttons[3].pressed && !gamepad.buttons[3].wasPressed)) {
-            console.log('🎮 Gamepad: A/B/X/Y pressed');
-            if (gameOver) {
-                initializeGame();
-            } else if (isPaused) {
-                isPaused = false;
-                unpauseSound.play().catch(error => console.log("Audio playback failed:", error));
-            }
-        }
 
+        // A, B, X, or Y button - Unpause or restart game
+    if ((gamepad.buttons[0].pressed && !gamepad.buttons[0].wasPressed) ||
+        (gamepad.buttons[1].pressed && !gamepad.buttons[1].wasPressed) ||
+        (gamepad.buttons[2].pressed && !gamepad.buttons[2].wasPressed) ||
+        (gamepad.buttons[3].pressed && !gamepad.buttons[3].wasPressed)) {
+        console.log('🎮 Gamepad: A/B/X/Y pressed');
+        if (gameOver) {
+            console.log('🐍 Game restarted via gamepad');
+            initializeGame();
+        } else if (isPaused) {
+            isPaused = false;
+            console.log('🐍 Game unpaused via gamepad button');
+            console.log('🔊 Sound Game unpause');
+            unpauseSound.play().catch(error => console.log("Audio playback failed:", error));
+            vibrateOnPauseToggle(gamepad);
+        }
+    }
+    
         // Update button states
         gamepad.buttons.forEach((button, index) => {
             button.wasPressed = button.pressed;
@@ -278,6 +286,43 @@ function processJoystickInput(x, y) {
     }
     return { dx: 0, dy: 0 };
 }
+
+
+// adding support for Gamepad vibration
+function vibrateGamepad(gamepad, duration, weakMag, strongMag) {
+    if (gamepad && gamepad.vibrationActuator && gamepad.vibrationActuator.type === 'dual-rumble') {
+        gamepad.vibrationActuator.playEffect('dual-rumble', {
+            duration: duration,
+            startDelay: 0,
+            weakMagnitude: weakMag,
+            strongMagnitude: strongMag
+        }).catch(error => console.log('🎮 Vibration failed:', error));
+    }
+}
+
+function vibrateOnEatFood(gamepad) {
+    vibrateGamepad(gamepad, 200, 0.2, 0.5);
+    console.log('🎮 Vibration: Food eaten');
+}
+
+function vibrateOnGameOver(gamepad) {
+    vibrateGamepad(gamepad, 1000, 0.9, 0.8);
+    console.log('🎮 Vibration: Game Over');
+}
+
+function vibrateOnPauseToggle(gamepad) {
+    // First pulse: short and sharp (like a dot)
+    vibrateGamepad(gamepad, 100, 0.3, 0.4);
+    
+    // Wait a bit, then second pulse: longer and stronger (like a dash)
+    setTimeout(() => {
+        vibrateGamepad(gamepad, 200, 0.4, 0.5);
+        console.log('🎮 Vibration: Pause toggle');
+    }, 150); // 150ms delay between pulses
+}
+
+
+
 
 // Game rendering functions
 function drawGame() {
@@ -395,6 +440,12 @@ function moveSnake() {
         score++;
         updateLevel();
         generateFood();
+
+        // Add vibration when eating food
+        const gamepads = navigator.getGamepads();
+        if (gamepads && gamepads[0]) {
+            vibrateOnEatFood(gamepads[0]);
+        }        
         
         eatSound.currentTime = 0;
         eatSound.play()
@@ -412,6 +463,10 @@ function checkCollision() {
     if (wallMode && (head.x < 0 || head.x >= tileCount || head.y < 0 || head.y >= tileCount)) {
         console.log('🐍 Snake hit wall');
         gameOver = true;
+        const gamepads = navigator.getGamepads();
+        if (gamepads && gamepads[0]) {
+            vibrateOnGameOver(gamepads[0]);
+        }
     }
 
     // Check self collision - possible at length 4 and above
@@ -419,6 +474,10 @@ function checkCollision() {
         if (head.x === snake[i].x && head.y === snake[i].y) {
             console.log('🐍 Snake hit itself');
             gameOver = true;
+            const gamepads = navigator.getGamepads();
+            if (gamepads && gamepads[0]) {
+                vibrateOnGameOver(gamepads[0]);
+            }
             break;
         }
     }
@@ -623,6 +682,12 @@ document.addEventListener('keydown', (e) => {
                      .then(() => console.log(`🔊 Sound Game ${isPaused ? 'pause' : 'unpause'}`))
                      .catch(error => console.log('🔇 Sound Game pause sound failed:', error));
                          isPaused && drawPauseScreen();
+                
+                // Add vibration feedback for keyboard pause
+                const gamepads = navigator.getGamepads();
+                if (gamepads && gamepads[0]) {
+                    vibrateOnPauseToggle(gamepads[0]);
+                    }
                 }
                 break;    }
 });
