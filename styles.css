@@ -220,3 +220,14 @@ body {
     src: url('./fonts/Roboto-Bold.woff2') format('woff2');
     font-display: swap;
 }
+
+* {
+    outline: none !important;
+    -webkit-tap-highlight-color: transparent;
+}
+
+button, [tabindex] {
+    outline: none !important;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-focus-ring-color: transparent;
+}

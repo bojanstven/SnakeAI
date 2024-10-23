@@ -7,7 +7,7 @@ const highScoreElement = document.getElementById('high-score-value');
 const wallModeButton = document.getElementById('wall-mode');
 const aiModeButton = document.getElementById('ai-mode');
 const gameAreaContainer = document.getElementById('game-area-container');
-const version = 'v2.9'; // Shadow for 3D effect, snake head
+const version = 'v2.9.1'; // Focus/tab prevention added
 
 // Audio elements
 const pauseSound = document.getElementById('pauseSound');
@@ -678,6 +678,16 @@ canvas.addEventListener('touchend', (e) => {
 resizeCanvas();
 window.addEventListener('resize', resizeCanvas);
 initGamepad();
+
+// Add the focus/tab prevention code here
+document.querySelectorAll('button, [tabindex]').forEach(element => {
+    element.tabIndex = -1;
+});
+
+document.addEventListener('mousedown', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+}, true);
 
 function gamepadInputLoop() {
     handleGamepadInput();
