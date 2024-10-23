@@ -7,7 +7,7 @@ const highScoreElement = document.getElementById('high-score-value');
 const wallModeButton = document.getElementById('wall-mode');
 const aiModeButton = document.getElementById('ai-mode');
 const gameAreaContainer = document.getElementById('game-area-container');
-const version = 'v3.0'; // Gamepad VIBRATION added
+const version = 'v3.1'; // 2-finger-tap pause/unpause
 
 // Audio elements
 const pauseSound = document.getElementById('pauseSound');
@@ -35,6 +35,7 @@ let gameOver = false;
 let highScore = 0;
 let isPaused = false;
 let gameOverSoundPlayed = false;
+let screenTransitioning = false;
 
 // Gamepad variables
 let gamepadActive = false;
@@ -47,6 +48,7 @@ const JOYSTICK_THRESHOLD = 0.5; // Threshold for joystick input
 // Touch variables
 let touchStartX = 0;
 let touchStartY = 0;
+let wasTwoFingerTouch = false;
 
 function resizeCanvas() {
     const container = canvas.parentElement;
@@ -329,12 +331,20 @@ function drawGame() {
     clearCanvas();
     if (gameOver) {
         drawGameOver();
+        screenTransitioning = true;  // Screen is showing game over
         return;
     }
+    
+    // Screen has transitioned from game over to active game
+    if (screenTransitioning) {
+        screenTransitioning = false;
+    }
+    
     if (isPaused) {
         drawPauseScreen();
         return;
     }
+    
     if (aiMode) {
         moveAI();
     }
@@ -697,47 +707,74 @@ wallModeButton.addEventListener('click', toggleWallMode);
 aiModeButton.addEventListener('click', toggleAIMode);
 
 canvas.addEventListener('touchstart', (e) => {
-    touchStartX = e.touches[0].clientX;
-    touchStartY = e.touches[0].clientY;
-    if (gameOver) {
-        console.log('👆 Touch to restart game');
-        initializeGame();
+    if (e.touches.length === 2 && !gameOver && !screenTransitioning) {  // Track two-finger touch, prevent during game over
+        e.preventDefault();
+        wasTwoFingerTouch = true;
+    } else if (e.touches.length === 1) {  // Single finger touch
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+        if (gameOver) {
+            console.log('👆 Game restarted via touch');
+            initializeGame();
+        }
     }
 }, false);
+
 
 canvas.addEventListener('touchmove', (e) => {
     e.preventDefault();
 }, false);
 
+// Update touch end handler to handle both two-finger taps and single-finger swipes
 canvas.addEventListener('touchend', (e) => {
-    if (gameOver) {
-        initializeGame();
-        return;
-    }
-    if (isPaused) {
-        isPaused = false;
-        return;
-    }
-    if (aiMode) return;
+    if (wasTwoFingerTouch && !gameOver && !screenTransitioning) {
+        e.preventDefault();
+        isPaused = !isPaused;
+        console.log(`👆 Game ${isPaused ? 'paused' : 'unpaused'} via two-finger tap`);
+        
+        if (isPaused) {
+            drawPauseScreen();
+            console.log('🔊 Sound Game pause');
+            pauseSound.play().catch(error => console.log("Audio playback failed:", error));
+        } else {
+            console.log('🔊 Sound Game unpause');
+            unpauseSound.play().catch(error => console.log("Audio playback failed:", error));
+        }
 
-    const touchEndX = e.changedTouches[0].clientX;
-    const touchEndY = e.changedTouches[0].clientY;
+        // Trigger vibration on the gamepad if connected
+        const gamepads = navigator.getGamepads();
+        if (gamepads && gamepads[0] && gamepadEnabled) {
+            vibrateOnPauseToggle(gamepads[0]);
+        }
+        
+        wasTwoFingerTouch = false;
+    } else if (!wasTwoFingerTouch && e.changedTouches.length === 1 && !gameOver) {
+        // Existing single-finger swipe handling...
+        const touchEndX = e.changedTouches[0].clientX;
+        const touchEndY = e.changedTouches[0].clientY;
+        
+        const dx = touchEndX - touchStartX;
+        const dy = touchEndY - touchStartY;
 
-    const dx = touchEndX - touchStartX;
-    const dy = touchEndY - touchStartY;
-
-    if (Math.abs(dx) > Math.abs(dy)) {
-        const direction = dx > 0 ? 'RIGHT' : 'LEFT';
-        console.log(`👆 Swipe ${direction} detected`);
-        changeDirection(dx > 0 ? 1 : -1, 0);
-        activateKey(dx > 0 ? 4 : 3);
-    } else {
-        const direction = dy > 0 ? 'DOWN' : 'UP';
-        console.log(`👆 Swipe ${direction} detected`);
-        changeDirection(0, dy > 0 ? 1 : -1);
-        activateKey(dy > 0 ? 2 : 1);
+        if (Math.abs(dx) > Math.abs(dy)) {
+            const direction = dx > 0 ? 'RIGHT' : 'LEFT';
+            console.log(`👆 Swipe ${direction} detected`);
+            changeDirection(dx > 0 ? 1 : -1, 0);
+            activateKey(dx > 0 ? 4 : 3);
+        } else {
+            const direction = dy > 0 ? 'DOWN' : 'UP';
+            console.log(`👆 Swipe ${direction} detected`);
+            changeDirection(0, dy > 0 ? 1 : -1);
+            activateKey(dy > 0 ? 2 : 1);
+        }
     }
 }, false);
+
+
+canvas.addEventListener('touchcancel', () => {
+    wasTwoFingerTouch = false;
+}, false);
+
 
 // Initialization
 resizeCanvas();
