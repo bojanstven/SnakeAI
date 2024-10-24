@@ -117,7 +117,7 @@ function initGamepad() {
         gamepadActive = true;
         pressGamepadButton();
         gamepadSound.play().catch(error => console.log("Audio playback failed:", error));
-        vibrateOnReconnect(e.gamepad);  // Add initial connection vibration
+        vibrateOnConnect(e.gamepad);  // Add initial connection vibration
     });
 
     window.addEventListener("gamepaddisconnected", (e) => {
@@ -278,7 +278,7 @@ if ((gamepad.buttons[8].pressed && !gamepad.buttons[8].wasPressed) ||
             const gamepadModeButton = document.getElementById('gamepad-mode');
             gamepadModeButton.classList.add('clicked');
             gamepadSound.play().catch(error => console.log("Audio playback failed:", error));
-            vibrateOnReconnect(gamepad);  // Add the wake-up vibration
+            vibrateOnConnect(gamepad);  // Add the wake-up vibration
         }
         lastGamepadActivity = now;
     }
@@ -332,9 +332,9 @@ function vibrateOnPauseToggle(gamepad) {
     }, 150); // 150ms delay between pulses
 }
 
-function vibrateOnReconnect(gamepad) {
+function vibrateOnConnect(gamepad) {
     vibrateGamepad(gamepad, 150, 0.8, 0.9);  // Short but powerful
-    console.log('🎮 Vibration: Gamepad reconnected');
+    console.log('🎮 Vibration: Gamepad connected');
 }
 
 
