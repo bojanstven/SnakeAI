@@ -7,7 +7,7 @@ const highScoreElement = document.getElementById('high-score-value');
 const wallModeButton = document.getElementById('wall-mode');
 const aiModeButton = document.getElementById('ai-mode');
 const gameAreaContainer = document.getElementById('game-area-container');
-const version = 'v3.1'; // 2-finger-tap pause/unpause
+const version = 'v3.3'; // Gamepad manual disconnect
 
 // Audio elements
 const pauseSound = document.getElementById('pauseSound');
@@ -117,6 +117,7 @@ function initGamepad() {
         gamepadActive = true;
         pressGamepadButton();
         gamepadSound.play().catch(error => console.log("Audio playback failed:", error));
+        vibrateOnReconnect(e.gamepad);  // Add initial connection vibration
     });
 
     window.addEventListener("gamepaddisconnected", (e) => {
@@ -144,9 +145,9 @@ function unpressGamepadButton() {
 function checkGamepadActivity() {
     const now = Date.now();
     if (gamepadActive && now - lastGamepadActivity > INACTIVITY_TIMEOUT) {
+        console.log('🎮 Gamepad: Disconnected due to inactivity');
+        gamepadActive = false;  // Add this line
         unpressGamepadButton();
-    } else if (now - lastGamepadActivity <= INACTIVITY_TIMEOUT) {
-        pressGamepadButton();
     }
 }
 
@@ -270,11 +271,18 @@ if ((gamepad.buttons[8].pressed && !gamepad.buttons[8].wasPressed) ||
 
         // Update activity status
         if (gamepad.buttons.some(button => button.pressed) || 
-            gamepad.axes.some(axis => Math.abs(axis) > 0.1)) {
+        gamepad.axes.some(axis => Math.abs(axis) > 0.1)) {
+        if (!gamepadActive) {
+            console.log('🎮 Gamepad connected:', gamepad.id);
             gamepadActive = true;
-            lastGamepadActivity = now;
-            pressGamepadButton();
+            const gamepadModeButton = document.getElementById('gamepad-mode');
+            gamepadModeButton.classList.add('clicked');
+            gamepadSound.play().catch(error => console.log("Audio playback failed:", error));
+            vibrateOnReconnect(gamepad);  // Add the wake-up vibration
         }
+        lastGamepadActivity = now;
+    }
+    
     }
 }
 
@@ -292,6 +300,7 @@ function processJoystickInput(x, y) {
 
 // adding support for Gamepad vibration
 function vibrateGamepad(gamepad, duration, weakMag, strongMag) {
+    if (!gamepadActive) return;  // No vibration if not active
     if (gamepad && gamepad.vibrationActuator && gamepad.vibrationActuator.type === 'dual-rumble') {
         gamepad.vibrationActuator.playEffect('dual-rumble', {
             duration: duration,
@@ -323,7 +332,10 @@ function vibrateOnPauseToggle(gamepad) {
     }, 150); // 150ms delay between pulses
 }
 
-
+function vibrateOnReconnect(gamepad) {
+    vibrateGamepad(gamepad, 150, 0.8, 0.9);  // Short but powerful
+    console.log('🎮 Vibration: Gamepad reconnected');
+}
 
 
 // Game rendering functions
@@ -705,6 +717,13 @@ document.addEventListener('keydown', (e) => {
 // Mouse/touch event listeners
 wallModeButton.addEventListener('click', toggleWallMode);
 aiModeButton.addEventListener('click', toggleAIMode);
+
+document.getElementById('gamepad-mode').addEventListener('click', () => {
+    const gamepadModeButton = document.getElementById('gamepad-mode');
+    gamepadModeButton.classList.remove('clicked');
+    gamepadActive = false;
+    console.log('🎮 Gamepad: Manually disconnected');
+});
 
 canvas.addEventListener('touchstart', (e) => {
     if (e.touches.length === 2 && !gameOver && !screenTransitioning) {  // Track two-finger touch, prevent during game over
