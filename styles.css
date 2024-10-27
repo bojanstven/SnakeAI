@@ -231,3 +231,31 @@ button, [tabindex] {
     -webkit-tap-highlight-color: transparent;
     -webkit-focus-ring-color: transparent;
 }
+
+#game-controls-config {
+    margin-top: 6px;
+    display: flex;
+    justify-content: space-between;
+}
+
+#game-controls-config .control-button {
+    width: 40px;  /* Match height of other buttons */
+    height: 40px;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto; /* Don't grow or shrink */
+}
+
+#game-controls-config .control-button:first-child {
+    margin-right: auto; /* Push to left edge */
+}
+
+#game-controls-config .control-button:last-child {
+    margin-left: auto; /* Push to right edge */
+}
+
+#game-controls-config .control-button .material-icons {
+    font-size: 24px; /* Ensure icon size is consistent */
+}

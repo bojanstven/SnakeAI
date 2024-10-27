@@ -7,7 +7,7 @@ const highScoreElement = document.getElementById('high-score-value');
 const wallModeButton = document.getElementById('wall-mode');
 const aiModeButton = document.getElementById('ai-mode');
 const gameAreaContainer = document.getElementById('game-area-container');
-const version = 'v3.3'; // Gamepad manual disconnect
+const version = 'v3.3.1'; // Control config buttons added
 
 // Audio elements
 const pauseSound = document.getElementById('pauseSound');
@@ -19,6 +19,8 @@ const autoplayOffSound = document.getElementById('autoplayOffSound');
 const eatSound = document.getElementById('eatSound');
 const gameOverSound = document.getElementById('gameOverSound');
 const gamepadSound = document.getElementById('gamepadSound');
+let soundEnabled = true;
+
 
 // Game state variables
 const gridSize = 20;
@@ -93,9 +95,11 @@ function toggleWallMode() {
     gameAreaContainer.classList.toggle('walls-on', wallMode);
     
     // Play appropriate sound based on wall mode state
+    if (soundEnabled) {
     (wallMode ? wallOnSound : wallOffSound).play()
         .then(() => console.log(`🔊 Sound Wall mode ${wallMode ? 'on' : 'off'}`))
         .catch(error => console.log('🔇 Sound Wall mode sound failed:', error));
+    }
 }
 
 function toggleAIMode() {
@@ -105,9 +109,11 @@ function toggleAIMode() {
     aiModeButton.classList.toggle('clicked', aiMode);
     
     // Play appropriate sound based on AI mode state
+    if (soundEnabled) {
     (aiMode ? autoplayOnSound : autoplayOffSound).play()
         .then(() => console.log(`🔊 Sound AI mode ${aiMode ? 'on' : 'off'}`))
         .catch(error => console.log('🔇 Sound AI mode sound failed:', error));
+    }
 }
 
 // Gamepad initialization and handling
@@ -116,7 +122,7 @@ function initGamepad() {
         console.log("Gamepad connected:", e.gamepad.id);
         gamepadActive = true;
         pressGamepadButton();
-        gamepadSound.play().catch(error => console.log("Audio playback failed:", error));
+        soundEnabled && gamepadSound.play().catch(error => console.log("Audio playback failed:", error));
         vibrateOnConnect(e.gamepad);  // Add initial connection vibration
     });
 
@@ -175,6 +181,9 @@ function handleGamepadInput() {
         } else if (gamepad.buttons[15].pressed) {
             newDx = 1; // Right
             if (newDx !== dx) console.log('🎮 Gamepad: D-pad RIGHT pressed');
+        }
+        if (gamepad.buttons[6].pressed && !gamepad.buttons[6].wasPressed) {
+            toggleSound('gamepad');
         }
         
 // Process joysticks only if D-pad isn't being used
@@ -236,11 +245,11 @@ if ((gamepad.buttons[8].pressed && !gamepad.buttons[8].wasPressed) ||
             console.log('🐍 Game paused via gamepad');
             console.log('🔊 Sound Game pause');
             drawPauseScreen();
-            pauseSound.play().catch(error => console.log("Audio playback failed:", error));
+            soundEnabled && pauseSound.play().catch(error => console.log("Audio playback failed:", error));
         } else {
             console.log('🐍 Game unpaused via gamepad');
             console.log('🔊 Sound Game unpause');
-            unpauseSound.play().catch(error => console.log("Audio playback failed:", error));
+            soundEnabled && unpauseSound.play().catch(error => console.log("Audio playback failed:", error));
         }
         vibrateOnPauseToggle(gamepad);
     }
@@ -470,7 +479,7 @@ function moveSnake() {
         }        
         
         eatSound.currentTime = 0;
-        eatSound.play()
+        soundEnabled && eatSound.play()
         .then(() => console.log('🔊 Sound Food eaten'))
         .catch(error => console.log('🔇 Sound Food eaten sound failed:', error));
 
@@ -511,7 +520,7 @@ function checkCollision() {
 
 function drawGameOver() {
     if (!gameOverSoundPlayed) {
-        gameOverSound.play()
+        soundEnabled && gameOverSound.play()
             .then(() => console.log('🔊 Sound Game over'))
             .catch(error => console.log('🔇 Sound Game over sound failed:', error));
         gameOverSoundPlayed = true;
@@ -633,12 +642,38 @@ function activateKey(keyIndex) {
 function getGameSpeed() {
     return Math.max(180 - (level - 1) * 5, 50);
 }
+
+
+
+function toggleSound(source = 'click') {
+    soundEnabled = !soundEnabled;
+    const btnSound = document.getElementById('btnSound');
+    const icon = btnSound.querySelector('.material-icons');
+    
+    icon.textContent = soundEnabled ? 'volume_up' : 'volume_off';
+    console.log(`🔊 Sounds ${soundEnabled ? 'enabled' : 'disabled'} by ${source}`);
+    
+    // Update button state
+    btnSound.classList.toggle('clicked', !soundEnabled);
+}
+
+
+
+
 // Event listeners
+
+
+document.getElementById('btnSound').addEventListener('click', () => toggleSound('click'));
+
+
 document.addEventListener('keydown', (e) => {
     if (gameOver && (e.code === 'Space' || e.key === 'Escape')) {
         console.log('🐍 Game restarted via keyboard');
         initializeGame();
         return;
+    }
+    if (e.key.toLowerCase() === 'm') {
+        toggleSound('keyboard');
     }
 
     switch (e.key) {
