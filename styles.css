@@ -239,7 +239,7 @@ button, [tabindex] {
 }
 
 #game-controls-config .control-button {
-    width: 40px;  /* Match height of other buttons */
+    width: 48px;  /* Match height of other buttons */
     height: 40px;
     padding: 8px;
     display: flex;

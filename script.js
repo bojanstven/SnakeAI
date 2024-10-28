@@ -700,25 +700,25 @@ document.addEventListener('keydown', (e) => {
         case 'w':
         case 'W':
             console.log('🔠 Keyboard: W pressed');
-            activateKey(5);
+            activateKey(1);
             changeDirection(0, -1);
             break;
         case 's':
         case 'S':
             console.log('🔠 Keyboard: S pressed');
-            activateKey(6);
+            activateKey(2);
             changeDirection(0, 1);
             break;
         case 'a':
         case 'A':
             console.log('🔠 Keyboard: A pressed');
-            activateKey(7);
+            activateKey(3);
             changeDirection(-1, 0);
             break;
         case 'd':
         case 'D':
             console.log('🔠 Keyboard: D pressed');
-            activateKey(8);
+            activateKey(4);
             changeDirection(1, 0);
             break;
         case 'Enter':
