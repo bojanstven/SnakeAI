@@ -7,7 +7,7 @@ const highScoreElement = document.getElementById('high-score-value');
 const wallModeButton = document.getElementById('wall-mode');
 const aiModeButton = document.getElementById('ai-mode');
 const gameAreaContainer = document.getElementById('game-area-container');
-const version = 'v3.3.1'; // Control config buttons added
+const version = 'v3.3.2.5'; // flex arrows key highlighters
 
 // Audio elements
 const pauseSound = document.getElementById('pauseSound');
@@ -38,6 +38,10 @@ let highScore = 0;
 let isPaused = false;
 let gameOverSoundPlayed = false;
 let screenTransitioning = false;
+
+let currentDirection = { dx: 0, dy: 0 };
+let keyPressTimeout = null;
+
 
 // Gamepad variables
 let gamepadActive = false;
@@ -572,6 +576,11 @@ function moveAI() {
     let bestMove = null;
     let maxScore = -Infinity;
 
+    // Always ensure all keys are deactivated
+    for (let i = 1; i <= 4; i++) {
+        deactivateKey(i);
+    }
+
     for (const move of possibleMoves) {
         const newX = (head.x + move.dx + tileCount) % tileCount;
         const newY = (head.y + move.dy + tileCount) % tileCount;
@@ -588,10 +597,19 @@ function moveAI() {
     }
 
     if (bestMove) {
-        dx = bestMove.dx;
-        dy = bestMove.dy;
+        // Only show key press if direction actually changes
+        if (bestMove.dx !== dx || bestMove.dy !== dy) {
+            if (bestMove.dx === 1) activateKey(4);      // right
+            else if (bestMove.dx === -1) activateKey(3); // left
+            else if (bestMove.dy === -1) activateKey(1); // up
+            else if (bestMove.dy === 1) activateKey(2);  // down
+            
+            dx = bestMove.dx;
+            dy = bestMove.dy;
+        }
     }
 }
+
 
 function evaluateMove(x, y) {
     const distanceToFood = Math.abs(x - food.x) + Math.abs(y - food.y);
@@ -608,13 +626,29 @@ function changeDirection(newDx, newDy) {
         return;
     }
     
-    let direction = '';
-    if (newDx === 1) direction = 'RIGHT';
-    else if (newDx === -1) direction = 'LEFT';
-    else if (newDy === -1) direction = 'UP';
-    else if (newDy === 1) direction = 'DOWN';
+    // Only animate key press if direction actually changes
+    if (newDx !== currentDirection.dx || newDy !== currentDirection.dy) {
+        let keyIndex;
+        if (newDx === 1) {
+            keyIndex = 4; // right
+            direction = 'RIGHT';
+        } else if (newDx === -1) {
+            keyIndex = 3; // left
+            direction = 'LEFT';
+        } else if (newDy === -1) {
+            keyIndex = 1; // up
+            direction = 'UP';
+        } else if (newDy === 1) {
+            keyIndex = 2; // down
+            direction = 'DOWN';
+        }
+
+        activateKey(keyIndex);
+        console.log(`🐍 Direction changed to: ${direction}`);
+        currentDirection.dx = newDx;
+        currentDirection.dy = newDy;
+    }
     
-    console.log(`🐍 Direction changed to: ${direction}`);
     dx = newDx;
     dy = newDy;
 }
@@ -632,12 +666,33 @@ function drawPauseScreen() {
 }
 
 function activateKey(keyIndex) {
-    const keyElement = document.querySelector(`.key:nth-child(${keyIndex})`);
+    let keyId;
+    switch(keyIndex) {
+        case 1: keyId = 'key-up'; break;
+        case 2: keyId = 'key-down'; break;
+        case 3: keyId = 'key-left'; break;
+        case 4: keyId = 'key-right'; break;
+    }
+    const keyElement = document.getElementById(keyId);
     if (keyElement) {
         keyElement.classList.add('active');
-        setTimeout(() => keyElement.classList.remove('active'), 200);
     }
 }
+
+function deactivateKey(keyIndex) {
+    let keyId;
+    switch(keyIndex) {
+        case 1: keyId = 'key-up'; break;
+        case 2: keyId = 'key-down'; break;
+        case 3: keyId = 'key-left'; break;
+        case 4: keyId = 'key-right'; break;
+    }
+    const keyElement = document.getElementById(keyId);
+    if (keyElement) {
+        keyElement.classList.remove('active');
+    }
+}
+
 
 function getGameSpeed() {
     return Math.max(180 - (level - 1) * 5, 50);
@@ -661,6 +716,33 @@ function toggleSound(source = 'click') {
 
 
 // Event listeners
+
+
+document.addEventListener('keyup', (e) => {
+    switch (e.key) {
+        case 'ArrowUp':
+        case 'w':
+        case 'W':
+            deactivateKey(1);
+            break;
+        case 'ArrowDown':
+        case 's':
+        case 'S':
+            deactivateKey(2);
+            break;
+        case 'ArrowLeft':
+        case 'a':
+        case 'A':
+            deactivateKey(3);
+            break;
+        case 'ArrowRight':
+        case 'd':
+        case 'D':
+            deactivateKey(4);
+            break;
+    }
+});
+
 
 
 document.getElementById('btnSound').addEventListener('click', () => toggleSound('click'));

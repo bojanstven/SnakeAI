@@ -36,6 +36,12 @@ body {
     height: 100%;
 }
 
+#score {
+    min-width: 110px; /* or whatever width comfortably fits "Score: 99" */
+    text-align: left;  /* Ensure consistent alignment */
+}
+
+
 #title-score {
     display: flex;
     justify-content: space-between;
@@ -70,11 +76,10 @@ body {
 
 #keys {
     display: flex;
+    justify-content: center;
     margin-top: 4px;
     margin-bottom: 7px;
 }
-
-
 
 #score-level {
     display: flex;
@@ -115,22 +120,62 @@ body {
     font-size: 20px;
     margin-right: 4px;
 }
+
+.arrows {
+    display: grid;
+    grid-template-rows: 30px 30px;    /* Two rows of 30px each */
+    grid-template-columns: 30px 30px 30px;  /* Three columns of 30px each */
+    gap: 3px;
+}
+
+.arrows .key:nth-child(1) {  /* UP arrow */
+    grid-row: 1;
+    grid-column: 2;
+}
+
+.arrows .key:nth-child(2) {  /* LEFT arrow */
+    grid-row: 2;
+    grid-column: 1;
+}
+
+.arrows .key:nth-child(3) {  /* DOWN arrow */
+    grid-row: 2;
+    grid-column: 2;
+}
+
+.arrows .key:nth-child(4) {  /* RIGHT arrow */
+    grid-row: 2;
+    grid-column: 3;
+}
+
+
 .key {
-    background-color: #f1f1f1;
-    border: 1px solid #ccc;
-    border-radius: 3px;
-    padding: 2px 4px;
-    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(to bottom, rgba(76, 175, 80, 0.98), rgba(76, 175, 80, 0.9));
+    color: rgb(33, 2, 2);
+    width: 30px;
+    height: 30px;
+    border-radius: 5px;
+    font-family: 'Roboto', sans-serif;
+    font-size: 21px;
     font-weight: bold;
-    color: #0f361b;
-    opacity: 0.3;
-    transition: all 0.3s ease;
+    transition: all 0.3s;
+    box-shadow: 
+        inset 0 2px 2px rgba(255, 255, 255, 0.3),  /* Stronger top inner highlight */
+        inset 0 -2px 2px rgba(0, 0, 0, 0.15),      /* Stronger bottom inner shadow */
+        0 2px 4px rgba(0, 0, 0, 0.3),              /* Enhanced outer shadow */
+        0 1px 2px rgba(0, 0, 0, 0.2);              /* Additional subtle shadow */
+    border: 1px solid rgba(0, 0, 0, 0.1);          /* Subtle border for definition */
 }
 
 .key.active {
-    opacity: 1;
-    background-color: #1B5E20;
-    color: white;
+    background: #1b5e20;
+    box-shadow: 
+        inset 0 2px 5px rgba(0, 0, 0, 0.3),        /* Deeper pressed inner shadow */
+        0 1px 2px rgba(255, 255, 255, 0.1);        /* Subtle outer glow */
+    transform: translateY(2px);                     /* More noticeable push down */
 }
 
 #version-info {
