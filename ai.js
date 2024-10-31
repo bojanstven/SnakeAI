@@ -4,48 +4,80 @@
  * Evaluates the best move for the AI
  * @returns {Object} The best move as {dx, dy}
  */
+
+
 function moveAI() {
     const head = snake[0];
+    
+    // Clear all previous key highlights first
+    for (let i = 1; i <= 4; i++) {
+        deactivateKey(i);
+    }
+
     const possibleMoves = [
-        {dx: 0, dy: -1, key: 1},  // up (ArrowUp)
-        {dx: 0, dy: 1, key: 2},   // down (ArrowDown)
-        {dx: -1, dy: 0, key: 3},  // left (ArrowLeft)
-        {dx: 1, dy: 0, key: 4}    // right (ArrowRight)
+        {dx: 0, dy: -1, name: 'UP'},
+        {dx: 0, dy: 1, name: 'DOWN'},
+        {dx: -1, dy: 0, name: 'LEFT'},
+        {dx: 1, dy: 0, name: 'RIGHT'}
     ];
 
     let bestMove = null;
     let maxScore = -Infinity;
 
     for (const move of possibleMoves) {
-        let newX = head.x + move.dx;
-        let newY = head.y + move.dy;
+        const newX = (head.x + move.dx + tileCount) % tileCount;
+        const newY = (head.y + move.dy + tileCount) % tileCount;
 
-        if (!wallMode) {
-            newX = (newX + tileCount) % tileCount;
-            newY = (newY + tileCount) % tileCount;
-        }
-
-        if (checkAICollision(newX, newY)) {
+        if (snake.some(segment => segment.x === newX && segment.y === newY)) {
+            console.log(`🤖 ${move.name} would hit snake - skipping`);
             continue;
         }
 
         const score = evaluateMove(newX, newY);
+        console.log(`🤖 Evaluating ${move.name}: score ${score}`);
+        
         if (score > maxScore) {
             maxScore = score;
             bestMove = move;
         }
     }
 
-
     if (bestMove) {
-        dx = bestMove.dx;
-        dy = bestMove.dy;
-        activateKey(bestMove.key);  // Trigger arrow key animation
+        // Only update direction and highlight if we're actually changing direction
+        if (bestMove.dx !== dx || bestMove.dy !== dy) {
+            console.log(`🤖 Changing direction to ${bestMove.name} (score: ${maxScore})`);
+            
+            // Highlight the appropriate key
+            let keyToDeactivate;
+            if (bestMove.dx === 1) {
+                activateKey(4);      // right
+                keyToDeactivate = 4;
+            } else if (bestMove.dx === -1) {
+                activateKey(3);      // left
+                keyToDeactivate = 3;
+            } else if (bestMove.dy === -1) {
+                activateKey(1);      // up
+                keyToDeactivate = 1;
+            } else if (bestMove.dy === 1) {
+                activateKey(2);      // down
+                keyToDeactivate = 2;
+            }
+            
+            dx = bestMove.dx;
+            dy = bestMove.dy;
+
+            // Deactivate the key after 150ms
+            setTimeout(() => {
+                if (keyToDeactivate) {
+                    deactivateKey(keyToDeactivate);
+                }
+            }, 450);
+
+        } else {
+            console.log(`🤖 Continuing ${bestMove.name} (score: ${maxScore})`);
+        }
     } else {
-        // Fallback in case no best move is found
-        const safeMove = findSafeDirection();
-        dx = safeMove.dx;
-        dy = safeMove.dy;
+        console.log('🤖 No valid moves found!');
     }
 }
 

@@ -7,7 +7,8 @@ const highScoreElement = document.getElementById('high-score-value');
 const wallModeButton = document.getElementById('wall-mode');
 const aiModeButton = document.getElementById('ai-mode');
 const gameAreaContainer = document.getElementById('game-area-container');
-const version = 'v3.3.2.5'; // flex arrows key highlighters
+const version = 'v3.3.3'; // highlight buttons circled arrows
+
 
 // Audio elements
 const pauseSound = document.getElementById('pauseSound');
@@ -23,7 +24,6 @@ let soundEnabled = true;
 
 
 // Game state variables
-const gridSize = 20;
 const tileCount = 18;
 let snake;
 let food;
@@ -39,22 +39,20 @@ let isPaused = false;
 let gameOverSoundPlayed = false;
 let screenTransitioning = false;
 
-let currentDirection = { dx: 0, dy: 0 };
-let keyPressTimeout = null;
-
 
 // Gamepad variables
 let gamepadActive = false;
 let lastGamepadActivity = 0;
 const INACTIVITY_TIMEOUT = 60000; // 1 minute in milliseconds
-let lastDirectionChange = { dx: 0, dy: 0, timestamp: 0 };
-const DIRECTION_CHANGE_THRESHOLD = 16; // Minimum time (ms) between direction changes
 const JOYSTICK_THRESHOLD = 0.5; // Threshold for joystick input
+
 
 // Touch variables
 let touchStartX = 0;
 let touchStartY = 0;
 let wasTwoFingerTouch = false;
+
+
 
 function resizeCanvas() {
     const container = canvas.parentElement;
@@ -564,51 +562,8 @@ function updateHighScore() {
     }
 }
 
-function moveAI() {
-    const head = snake[0];
-    const possibleMoves = [
-        {dx: 0, dy: -1},  // up
-        {dx: 0, dy: 1},   // down
-        {dx: -1, dy: 0},  // left
-        {dx: 1, dy: 0}    // right
-    ];
 
-    let bestMove = null;
-    let maxScore = -Infinity;
 
-    // Always ensure all keys are deactivated
-    for (let i = 1; i <= 4; i++) {
-        deactivateKey(i);
-    }
-
-    for (const move of possibleMoves) {
-        const newX = (head.x + move.dx + tileCount) % tileCount;
-        const newY = (head.y + move.dy + tileCount) % tileCount;
-
-        if (snake.some(segment => segment.x === newX && segment.y === newY)) {
-            continue;
-        }
-
-        const score = evaluateMove(newX, newY);
-        if (score > maxScore) {
-            maxScore = score;
-            bestMove = move;
-        }
-    }
-
-    if (bestMove) {
-        // Only show key press if direction actually changes
-        if (bestMove.dx !== dx || bestMove.dy !== dy) {
-            if (bestMove.dx === 1) activateKey(4);      // right
-            else if (bestMove.dx === -1) activateKey(3); // left
-            else if (bestMove.dy === -1) activateKey(1); // up
-            else if (bestMove.dy === 1) activateKey(2);  // down
-            
-            dx = bestMove.dx;
-            dy = bestMove.dy;
-        }
-    }
-}
 
 
 function evaluateMove(x, y) {
@@ -627,7 +582,7 @@ function changeDirection(newDx, newDy) {
     }
     
     // Only animate key press if direction actually changes
-    if (newDx !== currentDirection.dx || newDy !== currentDirection.dy) {
+    if (newDx !== dx || newDy !== dy) {
         let keyIndex;
         if (newDx === 1) {
             keyIndex = 4; // right
@@ -645,8 +600,6 @@ function changeDirection(newDx, newDy) {
 
         activateKey(keyIndex);
         console.log(`🐍 Direction changed to: ${direction}`);
-        currentDirection.dx = newDx;
-        currentDirection.dy = newDy;
     }
     
     dx = newDx;
@@ -694,6 +647,7 @@ function deactivateKey(keyIndex) {
 }
 
 
+
 function getGameSpeed() {
     return Math.max(180 - (level - 1) * 5, 50);
 }
@@ -706,13 +660,11 @@ function toggleSound(source = 'click') {
     const icon = btnSound.querySelector('.material-icons');
     
     icon.textContent = soundEnabled ? 'volume_up' : 'volume_off';
-    console.log(`🔊 Sounds ${soundEnabled ? 'enabled' : 'disabled'} by ${source}`);
+    console.log(`${soundEnabled ? '🔊' : '🔇'} Sounds ${soundEnabled ? 'enabled' : 'disabled'} by ${source}`);
     
     // Update button state
     btnSound.classList.toggle('clicked', !soundEnabled);
 }
-
-
 
 
 // Event listeners
@@ -859,7 +811,8 @@ canvas.addEventListener('touchstart', (e) => {
 
 canvas.addEventListener('touchmove', (e) => {
     e.preventDefault();
-}, false);
+}, { passive: false });
+
 
 // Update touch end handler to handle both two-finger taps and single-finger swipes
 canvas.addEventListener('touchend', (e) => {
@@ -885,30 +838,46 @@ canvas.addEventListener('touchend', (e) => {
         
         wasTwoFingerTouch = false;
     } else if (!wasTwoFingerTouch && e.changedTouches.length === 1 && !gameOver) {
-        // Existing single-finger swipe handling...
         const touchEndX = e.changedTouches[0].clientX;
         const touchEndY = e.changedTouches[0].clientY;
         
         const dx = touchEndX - touchStartX;
         const dy = touchEndY - touchStartY;
 
+        // Store the previously activated key so we can deactivate it
+        let keyToDeactivate;
+
         if (Math.abs(dx) > Math.abs(dy)) {
             const direction = dx > 0 ? 'RIGHT' : 'LEFT';
             console.log(`👆 Swipe ${direction} detected`);
             changeDirection(dx > 0 ? 1 : -1, 0);
-            activateKey(dx > 0 ? 4 : 3);
+            keyToDeactivate = dx > 0 ? 4 : 3;
+            activateKey(keyToDeactivate);
         } else {
             const direction = dy > 0 ? 'DOWN' : 'UP';
             console.log(`👆 Swipe ${direction} detected`);
             changeDirection(0, dy > 0 ? 1 : -1);
-            activateKey(dy > 0 ? 2 : 1);
+            keyToDeactivate = dy > 0 ? 2 : 1;
+            activateKey(keyToDeactivate);
         }
+
+        // Deactivate the key after a short delay to show the press
+        setTimeout(() => {
+            if (keyToDeactivate) {
+                deactivateKey(keyToDeactivate);
+            }
+        }, 350);
     }
 }, false);
 
 
+
 canvas.addEventListener('touchcancel', () => {
     wasTwoFingerTouch = false;
+    // Deactivate all keys to be safe
+    for (let i = 1; i <= 4; i++) {
+        deactivateKey(i);
+    }
 }, false);
 
 
