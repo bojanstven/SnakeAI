@@ -7,7 +7,20 @@ const highScoreElement = document.getElementById('high-score-value');
 const wallModeButton = document.getElementById('wall-mode');
 const aiModeButton = document.getElementById('ai-mode');
 const gameAreaContainer = document.getElementById('game-area-container');
-const version = 'v3.3.3'; // highlight buttons circled arrows
+const version = 'v3.3.4'; // gamepad L R ZL ZR buttons mapped
+
+
+// Add dynamic styles for game container
+const style = document.createElement('style');
+style.textContent = `
+    #game-area-container {
+        transition: transform 0.6s;
+        transform-style: preserve-3d;
+        perspective: 1000px;
+    }
+`;
+document.head.appendChild(style);
+
 
 
 // Audio elements
@@ -38,6 +51,8 @@ let highScore = 0;
 let isPaused = false;
 let gameOverSoundPlayed = false;
 let screenTransitioning = false;
+let settingsPanelVisible = false;
+
 
 
 // Gamepad variables
@@ -118,6 +133,25 @@ function toggleAIMode() {
     }
 }
 
+
+function toggleSettingsPanel() {
+    settingsPanelVisible = !settingsPanelVisible;
+    const gameAreaContainer = document.getElementById('game-area-container');
+    const settingsBtn = document.getElementById('btnSettings');
+    
+    if (settingsPanelVisible) {
+        gameAreaContainer.style.transform = 'rotateY(180deg)';
+        settingsBtn.classList.add('clicked');
+        console.log('⚙️ Settings panel revealed');
+    } else {
+        gameAreaContainer.style.transform = 'rotateY(0deg)';
+        settingsBtn.classList.remove('clicked');
+        console.log('⚙️ Settings panel hidden');
+    }
+}
+
+
+
 // Gamepad initialization and handling
 function initGamepad() {
     window.addEventListener("gamepadconnected", (e) => {
@@ -184,97 +218,107 @@ function handleGamepadInput() {
             newDx = 1; // Right
             if (newDx !== dx) console.log('🎮 Gamepad: D-pad RIGHT pressed');
         }
-        if (gamepad.buttons[6].pressed && !gamepad.buttons[6].wasPressed) {
-            toggleSound('gamepad');
-        }
-        
-// Process joysticks only if D-pad isn't being used
-if (newDx === 0 && newDy === 0) {
-    const leftJoystickInput = processJoystickInput(gamepad.axes[0], gamepad.axes[1]);
-    const rightJoystickInput = processJoystickInput(gamepad.axes[2], gamepad.axes[3]);
 
-    if (leftJoystickInput.dx !== 0 || leftJoystickInput.dy !== 0) {
-        newDx = leftJoystickInput.dx;
-        newDy = leftJoystickInput.dy;
-        if (newDx !== dx || newDy !== dy) {
-            let direction = '';
-            if (newDx === 1) direction = 'RIGHT';
-            else if (newDx === -1) direction = 'LEFT';
-            else if (newDy === -1) direction = 'UP';
-            else if (newDy === 1) direction = 'DOWN';
-            console.log(`Gamepad: Left stick moved ${direction}`);
+        // Process joysticks only if D-pad isn't being used
+        if (newDx === 0 && newDy === 0) {
+            const leftJoystickInput = processJoystickInput(gamepad.axes[0], gamepad.axes[1]);
+            const rightJoystickInput = processJoystickInput(gamepad.axes[2], gamepad.axes[3]);
+
+            if (leftJoystickInput.dx !== 0 || leftJoystickInput.dy !== 0) {
+                newDx = leftJoystickInput.dx;
+                newDy = leftJoystickInput.dy;
+                if (newDx !== dx || newDy !== dy) {
+                    let direction = '';
+                    if (newDx === 1) direction = 'RIGHT';
+                    else if (newDx === -1) direction = 'LEFT';
+                    else if (newDy === -1) direction = 'UP';
+                    else if (newDy === 1) direction = 'DOWN';
+                    console.log(`🎮 Gamepad: Left stick moved ${direction}`);
+                }
+            } else if (rightJoystickInput.dx !== 0 || rightJoystickInput.dy !== 0) {
+                newDx = rightJoystickInput.dx;
+                newDy = rightJoystickInput.dy;
+                if (newDx !== dx || newDy !== dy) {
+                    let direction = '';
+                    if (newDx === 1) direction = 'RIGHT';
+                    else if (newDx === -1) direction = 'LEFT';
+                    else if (newDy === -1) direction = 'UP';
+                    else if (newDy === 1) direction = 'DOWN';
+                    console.log(`🎮 Gamepad: Right stick moved ${direction}`);
+                }
+            }
         }
-    } else if (rightJoystickInput.dx !== 0 || rightJoystickInput.dy !== 0) {
-        newDx = rightJoystickInput.dx;
-        newDy = rightJoystickInput.dy;
-        if (newDx !== dx || newDy !== dy) {
-            let direction = '';
-            if (newDx === 1) direction = 'RIGHT';
-            else if (newDx === -1) direction = 'LEFT';
-            else if (newDy === -1) direction = 'UP';
-            else if (newDy === 1) direction = 'DOWN';
-            console.log(`🎮 Gamepad: Right stick moved ${direction}`);
-        }
-    }
-}
+
         // Process movement if direction changed
         if ((newDx !== dx || newDy !== dy) && (newDx !== 0 || newDy !== 0)) {
             changeDirection(newDx, newDy);
             lastDirectionChange = { dx: newDx, dy: newDy, timestamp: now };
         }
 
-        // L or ZL button - Toggle wall mode
-        if ((gamepad.buttons[4].pressed && !gamepad.buttons[4].wasPressed) ||
-            (gamepad.buttons[6].pressed && !gamepad.buttons[6].wasPressed)) {
-            console.log('🎮 Gamepad: L/ZL pressed');
+        // L button - Toggle wall mode
+        if (gamepad.buttons[4].pressed && !gamepad.buttons[4].wasPressed) {
+            console.log('🎮 Gamepad: L pressed - toggling wall mode');
             toggleWallMode();
         }
 
-        // R or ZR button - Toggle autoplay
-        if ((gamepad.buttons[5].pressed && !gamepad.buttons[5].wasPressed) ||
-            (gamepad.buttons[7].pressed && !gamepad.buttons[7].wasPressed)) {
-            console.log('🎮 Gamepad: R/ZR pressed');
+        // ZL button - Toggle sound
+        if (gamepad.buttons[6].pressed && !gamepad.buttons[6].wasPressed) {
+            console.log('🎮 Gamepad: ZL pressed - toggling sound');
+            toggleSound('gamepad');
+        }
+
+        // R button - Toggle autoplay
+        if (gamepad.buttons[5].pressed && !gamepad.buttons[5].wasPressed) {
+            console.log('🎮 Gamepad: R pressed - toggling autoplay');
             toggleAIMode();
         }
 
-// Minus or Plus button - Toggle pause
-if ((gamepad.buttons[8].pressed && !gamepad.buttons[8].wasPressed) ||
-    (gamepad.buttons[9].pressed && !gamepad.buttons[9].wasPressed)) {
-    console.log('🎮 Gamepad: Minus/Plus pressed');
-    if (!gameOver) {
-        isPaused = !isPaused;
-        if (isPaused) {
-            console.log('🐍 Game paused via gamepad');
-            console.log('🔊 Sound Game pause');
-            drawPauseScreen();
-            soundEnabled && pauseSound.play().catch(error => console.log("Audio playback failed:", error));
-        } else {
-            console.log('🐍 Game unpaused via gamepad');
-            console.log('🔊 Sound Game unpause');
-            soundEnabled && unpauseSound.play().catch(error => console.log("Audio playback failed:", error));
+        // ZR button - Toggle settings panel
+        if (gamepad.buttons[7].pressed && !gamepad.buttons[7].wasPressed) {
+            console.log('🎮 Gamepad: ZR pressed - toggling settings panel');
+            toggleSettingsPanel();
         }
-        vibrateOnPauseToggle(gamepad);
-    }
-}
+
+
+
+        // Minus or Plus button - Toggle pause
+        if ((gamepad.buttons[8].pressed && !gamepad.buttons[8].wasPressed) ||
+            (gamepad.buttons[9].pressed && !gamepad.buttons[9].wasPressed)) {
+            console.log('🎮 Gamepad: Minus/Plus pressed');
+            if (!gameOver) {
+                isPaused = !isPaused;
+                if (isPaused) {
+                    console.log('🐍 Game paused via gamepad');
+                    console.log('🔊 Sound Game pause');
+                    drawPauseScreen();
+                    soundEnabled && pauseSound.play().catch(error => console.log("Audio playback failed:", error));
+                } else {
+                    console.log('🐍 Game unpaused via gamepad');
+                    console.log('🔊 Sound Game unpause');
+                    soundEnabled && unpauseSound.play().catch(error => console.log("Audio playback failed:", error));
+                }
+                vibrateOnPauseToggle(gamepad);
+            }
+        }
 
         // A, B, X, or Y button - Unpause or restart game
-    if ((gamepad.buttons[0].pressed && !gamepad.buttons[0].wasPressed) ||
-        (gamepad.buttons[1].pressed && !gamepad.buttons[1].wasPressed) ||
-        (gamepad.buttons[2].pressed && !gamepad.buttons[2].wasPressed) ||
-        (gamepad.buttons[3].pressed && !gamepad.buttons[3].wasPressed)) {
-        console.log('🎮 Gamepad: A/B/X/Y pressed');
-        if (gameOver) {
-            console.log('🐍 Game restarted via gamepad');
-            initializeGame();
-        } else if (isPaused) {
-            isPaused = false;
-            console.log('🐍 Game unpaused via gamepad button');
-            console.log('🔊 Sound Game unpause');
-            unpauseSound.play().catch(error => console.log("Audio playback failed:", error));
-            vibrateOnPauseToggle(gamepad);
+        if ((gamepad.buttons[0].pressed && !gamepad.buttons[0].wasPressed) ||
+            (gamepad.buttons[1].pressed && !gamepad.buttons[1].wasPressed) ||
+            (gamepad.buttons[2].pressed && !gamepad.buttons[2].wasPressed) ||
+            (gamepad.buttons[3].pressed && !gamepad.buttons[3].wasPressed)) {
+            console.log('🎮 Gamepad: A/B/X/Y pressed');
+            if (gameOver) {
+                console.log('🐍 Game restarted via gamepad');
+                initializeGame();
+            } else if (isPaused) {
+                isPaused = false;
+                console.log('🐍 Game unpaused via gamepad button');
+                console.log('🔊 Sound Game unpause');
+                unpauseSound.play().catch(error => console.log("Audio playback failed:", error));
+                vibrateOnPauseToggle(gamepad);
+            }
         }
-    }
-    
+
         // Update button states
         gamepad.buttons.forEach((button, index) => {
             button.wasPressed = button.pressed;
@@ -282,18 +326,17 @@ if ((gamepad.buttons[8].pressed && !gamepad.buttons[8].wasPressed) ||
 
         // Update activity status
         if (gamepad.buttons.some(button => button.pressed) || 
-        gamepad.axes.some(axis => Math.abs(axis) > 0.1)) {
-        if (!gamepadActive) {
-            console.log('🎮 Gamepad connected:', gamepad.id);
-            gamepadActive = true;
-            const gamepadModeButton = document.getElementById('gamepad-mode');
-            gamepadModeButton.classList.add('clicked');
-            gamepadSound.play().catch(error => console.log("Audio playback failed:", error));
-            vibrateOnConnect(gamepad);  // Add the wake-up vibration
+            gamepad.axes.some(axis => Math.abs(axis) > 0.1)) {
+            if (!gamepadActive) {
+                console.log('🎮 Gamepad connected:', gamepad.id);
+                gamepadActive = true;
+                const gamepadModeButton = document.getElementById('gamepad-mode');
+                gamepadModeButton.classList.add('clicked');
+                gamepadSound.play().catch(error => console.log("Audio playback failed:", error));
+                vibrateOnConnect(gamepad);
+            }
+            lastGamepadActivity = now;
         }
-        lastGamepadActivity = now;
-    }
-    
     }
 }
 
@@ -655,16 +698,14 @@ function getGameSpeed() {
 
 
 function toggleSound(source = 'click') {
+    console.log(`${soundEnabled ? '🔇' : '🔊'} Sounds ${!soundEnabled ? 'enabled' : 'disabled'} by ${source}`);
     soundEnabled = !soundEnabled;
     const btnSound = document.getElementById('btnSound');
     const icon = btnSound.querySelector('.material-icons');
-    
     icon.textContent = soundEnabled ? 'volume_up' : 'volume_off';
-    console.log(`${soundEnabled ? '🔊' : '🔇'} Sounds ${soundEnabled ? 'enabled' : 'disabled'} by ${source}`);
-    
-    // Update button state
     btnSound.classList.toggle('clicked', !soundEnabled);
 }
+
 
 
 // Event listeners
@@ -700,12 +741,21 @@ document.addEventListener('keyup', (e) => {
 document.getElementById('btnSound').addEventListener('click', () => toggleSound('click'));
 
 
+
+document.getElementById('btnSettings').addEventListener('click', () => {
+    console.log('🖱️ Settings button clicked');
+    toggleSettingsPanel();
+});
+
+
+
 document.addEventListener('keydown', (e) => {
     if (gameOver && (e.code === 'Space' || e.key === 'Escape')) {
         console.log('🐍 Game restarted via keyboard');
         initializeGame();
         return;
     }
+
     if (e.key.toLowerCase() === 'm') {
         toggleSound('keyboard');
     }
@@ -765,22 +815,27 @@ document.addEventListener('keydown', (e) => {
                 toggleWallMode();
             }
             break;
-            case 'Escape':
-                 if (!gameOver) {
-                 isPaused = !isPaused;
-                 console.log(`🐍 Game ${isPaused ? 'paused' : 'unpaused'} via Esc key`);
-                 (isPaused ? pauseSound : unpauseSound).play()
-                     .then(() => console.log(`🔊 Sound Game ${isPaused ? 'pause' : 'unpause'}`))
-                     .catch(error => console.log('🔇 Sound Game pause sound failed:', error));
-                         isPaused && drawPauseScreen();
+        case '.':
+            console.log('⌨️ Keyboard: Dot key pressed - toggling settings panel');
+            toggleSettingsPanel();
+            break;
+        case 'Escape':
+            if (!gameOver) {
+                isPaused = !isPaused;
+                console.log(`🐍 Game ${isPaused ? 'paused' : 'unpaused'} via Esc key`);
+                (isPaused ? pauseSound : unpauseSound).play()
+                    .then(() => console.log(`🔊 Sound Game ${isPaused ? 'pause' : 'unpause'}`))
+                    .catch(error => console.log('🔇 Sound Game pause sound failed:', error));
+                isPaused && drawPauseScreen();
                 
                 // Add vibration feedback for keyboard pause
                 const gamepads = navigator.getGamepads();
                 if (gamepads && gamepads[0]) {
                     vibrateOnPauseToggle(gamepads[0]);
-                    }
                 }
-                break;    }
+            }
+            break;
+    }
 });
 
 // Mouse/touch event listeners

@@ -19,11 +19,11 @@
             <div id="score">Score: 0</div>
             <div id="keys">
                 <div class="arrows">
-                    <div id="key-up" class="key">↑</div>
-                    <div id="key-left" class="key">←</div>
-                    <div id="key-down" class="key">↓</div>
-                    <div id="key-right" class="key">→</div>
-                </div>
+                    <div id="key-up" class="key"><span class="material-symbols-outlined">arrow_circle_up</span></div>
+                    <div id="key-left" class="key"><span class="material-symbols-outlined">arrow_circle_left</span></div>
+                    <div id="key-down" class="key"><span class="material-symbols-outlined">arrow_circle_down</span></div>
+                    <div id="key-right" class="key"><span class="material-symbols-outlined">arrow_circle_right</span></div>
+                </div>                                
             </div>
                     <div id="level">Level: 1</div>
         </div>
