@@ -74,13 +74,6 @@ body {
     text-align: left;
 }
 
-#keys {
-    display: flex;
-    justify-content: center;
-    margin-top: 4px;
-    margin-bottom: 7px;
-}
-
 #score-level {
     display: flex;
     justify-content: space-between;
@@ -90,6 +83,7 @@ body {
     font-weight: bold;
     color: white;
 }
+
 #controls {
     margin-top: 10px;
     display: flex;
@@ -120,59 +114,6 @@ body {
     font-size: 20px;
     margin-right: 4px;
 }
-
-.arrows {
-    display: grid;
-    grid-template-rows: 28px 28px;
-    grid-template-columns: 28px 28px 28px;
-    gap: 3px;  /* Increased gap for better vertical separation */
-    align-items: center;
-    justify-items: center;
-}
-
-
-
-.arrows .key:nth-child(1) {  /* UP arrow */
-    grid-row: 1;
-    grid-column: 2;
-}
-
-.arrows .key:nth-child(2) {  /* LEFT arrow */
-    grid-row: 2;
-    grid-column: 1;
-}
-
-.arrows .key:nth-child(3) {  /* DOWN arrow */
-    grid-row: 2;
-    grid-column: 2;
-}
-
-.arrows .key:nth-child(4) {  /* RIGHT arrow */
-    grid-row: 2;
-    grid-column: 3;
-}
-
-
-.key {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    /* removed background: #4CAF50; */
-    color: rgb(13, 43, 4);
-    width: 30px;
-    height: 30px;
-    /* removed border-radius: 5px; */
-    transition: all 0.3s;
-    /* removed border: 1px solid rgba(0, 0, 0, 0.1); */
-    user-select: none;
-}
-
-
-.key.active {
-    /* removed background: #1b5e20; */
-    color: #93b891;  /* This will make the arrow white when active */
-}
-
 
 .material-symbols-outlined {
     font-family: 'Material Symbols Outlined';
@@ -266,7 +207,7 @@ body {
     font-family: 'Material Icons';
     font-style: normal;
     font-weight: 400;
-    src: url('./fonts/Material_Icons.woff2') format('woff2');
+    src: url('./fonts/Material-Icons.woff2') format('woff2');
     font-display: block;
 }
 

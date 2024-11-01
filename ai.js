@@ -9,11 +9,6 @@
 function moveAI() {
     const head = snake[0];
     
-    // Clear all previous key highlights first
-    for (let i = 1; i <= 4; i++) {
-        deactivateKey(i);
-    }
-
     const possibleMoves = [
         {dx: 0, dy: -1, name: 'UP'},
         {dx: 0, dy: 1, name: 'DOWN'},
@@ -43,36 +38,10 @@ function moveAI() {
     }
 
     if (bestMove) {
-        // Only update direction and highlight if we're actually changing direction
         if (bestMove.dx !== dx || bestMove.dy !== dy) {
             console.log(`🤖 Changing direction to ${bestMove.name} (score: ${maxScore})`);
-            
-            // Highlight the appropriate key
-            let keyToDeactivate;
-            if (bestMove.dx === 1) {
-                activateKey(4);      // right
-                keyToDeactivate = 4;
-            } else if (bestMove.dx === -1) {
-                activateKey(3);      // left
-                keyToDeactivate = 3;
-            } else if (bestMove.dy === -1) {
-                activateKey(1);      // up
-                keyToDeactivate = 1;
-            } else if (bestMove.dy === 1) {
-                activateKey(2);      // down
-                keyToDeactivate = 2;
-            }
-            
             dx = bestMove.dx;
             dy = bestMove.dy;
-
-            // Deactivate the key after 150ms
-            setTimeout(() => {
-                if (keyToDeactivate) {
-                    deactivateKey(keyToDeactivate);
-                }
-            }, 450);
-
         } else {
             console.log(`🤖 Continuing ${bestMove.name} (score: ${maxScore})`);
         }

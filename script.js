@@ -7,7 +7,7 @@ const highScoreElement = document.getElementById('high-score-value');
 const wallModeButton = document.getElementById('wall-mode');
 const aiModeButton = document.getElementById('ai-mode');
 const gameAreaContainer = document.getElementById('game-area-container');
-const version = 'v3.3.4'; // gamepad L R ZL ZR buttons mapped
+const version = 'v3.4'; // removed highlight keys
 
 
 // Add dynamic styles for game container
@@ -624,30 +624,21 @@ function changeDirection(newDx, newDy) {
         return;
     }
     
-    // Only animate key press if direction actually changes
+    // Only update direction and log if it actually changes
     if (newDx !== dx || newDy !== dy) {
-        let keyIndex;
-        if (newDx === 1) {
-            keyIndex = 4; // right
-            direction = 'RIGHT';
-        } else if (newDx === -1) {
-            keyIndex = 3; // left
-            direction = 'LEFT';
-        } else if (newDy === -1) {
-            keyIndex = 1; // up
-            direction = 'UP';
-        } else if (newDy === 1) {
-            keyIndex = 2; // down
-            direction = 'DOWN';
-        }
-
-        activateKey(keyIndex);
+        let direction = '';
+        if (newDx === 1) direction = 'RIGHT';
+        else if (newDx === -1) direction = 'LEFT';
+        else if (newDy === -1) direction = 'UP';
+        else if (newDy === 1) direction = 'DOWN';
+        
         console.log(`🐍 Direction changed to: ${direction}`);
     }
     
     dx = newDx;
     dy = newDy;
 }
+
 
 function drawPauseScreen() {
     ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
@@ -659,34 +650,6 @@ function drawPauseScreen() {
     ctx.fillText(`Score: ${score}`, canvas.width / 2, canvas.height / 2 + canvas.width / 30);
     ctx.font = `${canvas.width / 25}px Roboto`;
     ctx.fillText('Tap or Press Esc to Continue', canvas.width / 2, canvas.height / 2 + canvas.width / 10);
-}
-
-function activateKey(keyIndex) {
-    let keyId;
-    switch(keyIndex) {
-        case 1: keyId = 'key-up'; break;
-        case 2: keyId = 'key-down'; break;
-        case 3: keyId = 'key-left'; break;
-        case 4: keyId = 'key-right'; break;
-    }
-    const keyElement = document.getElementById(keyId);
-    if (keyElement) {
-        keyElement.classList.add('active');
-    }
-}
-
-function deactivateKey(keyIndex) {
-    let keyId;
-    switch(keyIndex) {
-        case 1: keyId = 'key-up'; break;
-        case 2: keyId = 'key-down'; break;
-        case 3: keyId = 'key-left'; break;
-        case 4: keyId = 'key-right'; break;
-    }
-    const keyElement = document.getElementById(keyId);
-    if (keyElement) {
-        keyElement.classList.remove('active');
-    }
 }
 
 
@@ -763,46 +726,38 @@ document.addEventListener('keydown', (e) => {
     switch (e.key) {
         case 'ArrowUp':
             console.log('↗️ Keyboard: UP arrow pressed');
-            activateKey(1);
             changeDirection(0, -1);
             break;
         case 'ArrowDown':
             console.log('↗️ Keyboard: DOWN arrow pressed');
-            activateKey(2);
             changeDirection(0, 1);
             break;
         case 'ArrowLeft':
             console.log('↗️ Keyboard: LEFT arrow pressed');
-            activateKey(3);
             changeDirection(-1, 0);
             break;
         case 'ArrowRight':
             console.log('↗️ Keyboard: RIGHT arrow pressed');
-            activateKey(4);
             changeDirection(1, 0);
             break;
         case 'w':
         case 'W':
             console.log('🔠 Keyboard: W pressed');
-            activateKey(1);
             changeDirection(0, -1);
             break;
         case 's':
         case 'S':
             console.log('🔠 Keyboard: S pressed');
-            activateKey(2);
             changeDirection(0, 1);
             break;
         case 'a':
         case 'A':
             console.log('🔠 Keyboard: A pressed');
-            activateKey(3);
             changeDirection(-1, 0);
             break;
         case 'd':
         case 'D':
             console.log('🔠 Keyboard: D pressed');
-            activateKey(4);
             changeDirection(1, 0);
             break;
         case 'Enter':
