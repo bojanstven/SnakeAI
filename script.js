@@ -7,7 +7,7 @@ const highScoreElement = document.getElementById('high-score-value');
 const wallModeButton = document.getElementById('wall-mode');
 const aiModeButton = document.getElementById('ai-mode');
 const gameAreaContainer = document.getElementById('game-area-container');
-const version = 'v3.4'; // removed highlight keys
+const version = 'v3.6'; // replaced materials icons with svg
 
 
 // Add dynamic styles for game container
@@ -107,29 +107,29 @@ function generateFood() {
 function toggleWallMode() {
     console.log(`🐍 Wall mode ${!wallMode ? 'activated' : 'deactivated'}`);
     wallMode = !wallMode;
-    wallModeButton.innerHTML = '<i class="material-icons">security</i> Walls';
+    // Remove the old innerHTML setting and just toggle the class
     wallModeButton.classList.toggle('clicked', wallMode);
     gameAreaContainer.classList.toggle('walls-on', wallMode);
     
     // Play appropriate sound based on wall mode state
     if (soundEnabled) {
-    (wallMode ? wallOnSound : wallOffSound).play()
-        .then(() => console.log(`🔊 Sound Wall mode ${wallMode ? 'on' : 'off'}`))
-        .catch(error => console.log('🔇 Sound Wall mode sound failed:', error));
+        (wallMode ? wallOnSound : wallOffSound).play()
+            .then(() => console.log(`🔊 Sound Wall mode ${wallMode ? 'on' : 'off'}`))
+            .catch(error => console.log('🔇 Sound Wall mode sound failed:', error));
     }
 }
 
 function toggleAIMode() {
     console.log(`🐍 AI mode ${!aiMode ? 'activated' : 'deactivated'}`);
     aiMode = !aiMode;
-    aiModeButton.innerHTML = '<i class="material-icons">rocket_launch</i> Autoplay';
+    // Remove the old innerHTML setting and just toggle the class
     aiModeButton.classList.toggle('clicked', aiMode);
     
     // Play appropriate sound based on AI mode state
     if (soundEnabled) {
-    (aiMode ? autoplayOnSound : autoplayOffSound).play()
-        .then(() => console.log(`🔊 Sound AI mode ${aiMode ? 'on' : 'off'}`))
-        .catch(error => console.log('🔇 Sound AI mode sound failed:', error));
+        (aiMode ? autoplayOnSound : autoplayOffSound).play()
+            .then(() => console.log(`🔊 Sound AI mode ${aiMode ? 'on' : 'off'}`))
+            .catch(error => console.log('🔇 Sound AI mode sound failed:', error));
     }
 }
 
@@ -664,41 +664,13 @@ function toggleSound(source = 'click') {
     console.log(`${soundEnabled ? '🔇' : '🔊'} Sounds ${!soundEnabled ? 'enabled' : 'disabled'} by ${source}`);
     soundEnabled = !soundEnabled;
     const btnSound = document.getElementById('btnSound');
-    const icon = btnSound.querySelector('.material-icons');
-    icon.textContent = soundEnabled ? 'volume_up' : 'volume_off';
+    const soundIcon = btnSound.querySelector('img');
+    soundIcon.src = soundEnabled ? 'svg/volume_up.svg' : 'svg/volume_off.svg';
     btnSound.classList.toggle('clicked', !soundEnabled);
 }
 
 
-
 // Event listeners
-
-
-document.addEventListener('keyup', (e) => {
-    switch (e.key) {
-        case 'ArrowUp':
-        case 'w':
-        case 'W':
-            deactivateKey(1);
-            break;
-        case 'ArrowDown':
-        case 's':
-        case 'S':
-            deactivateKey(2);
-            break;
-        case 'ArrowLeft':
-        case 'a':
-        case 'A':
-            deactivateKey(3);
-            break;
-        case 'ArrowRight':
-        case 'd':
-        case 'D':
-            deactivateKey(4);
-            break;
-    }
-});
-
 
 
 document.getElementById('btnSound').addEventListener('click', () => toggleSound('click'));
@@ -793,6 +765,7 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
+
 // Mouse/touch event listeners
 wallModeButton.addEventListener('click', toggleWallMode);
 aiModeButton.addEventListener('click', toggleAIMode);
@@ -803,6 +776,13 @@ document.getElementById('gamepad-mode').addEventListener('click', () => {
     gamepadActive = false;
     console.log('🎮 Gamepad: Manually disconnected');
 });
+
+
+document.getElementById('close-settings').addEventListener('click', () => {
+    console.log('⚙️ Settings panel closed via back button');
+    toggleSettingsPanel();
+});
+
 
 canvas.addEventListener('touchstart', (e) => {
     if (e.touches.length === 2 && !gameOver && !screenTransitioning) {  // Track two-finger touch, prevent during game over
@@ -853,41 +833,25 @@ canvas.addEventListener('touchend', (e) => {
         
         const dx = touchEndX - touchStartX;
         const dy = touchEndY - touchStartY;
-
-        // Store the previously activated key so we can deactivate it
-        let keyToDeactivate;
-
+    
         if (Math.abs(dx) > Math.abs(dy)) {
             const direction = dx > 0 ? 'RIGHT' : 'LEFT';
             console.log(`👆 Swipe ${direction} detected`);
             changeDirection(dx > 0 ? 1 : -1, 0);
-            keyToDeactivate = dx > 0 ? 4 : 3;
-            activateKey(keyToDeactivate);
         } else {
             const direction = dy > 0 ? 'DOWN' : 'UP';
             console.log(`👆 Swipe ${direction} detected`);
             changeDirection(0, dy > 0 ? 1 : -1);
-            keyToDeactivate = dy > 0 ? 2 : 1;
-            activateKey(keyToDeactivate);
         }
-
-        // Deactivate the key after a short delay to show the press
-        setTimeout(() => {
-            if (keyToDeactivate) {
-                deactivateKey(keyToDeactivate);
-            }
-        }, 350);
     }
+    
+    
 }, false);
 
 
 
 canvas.addEventListener('touchcancel', () => {
     wasTwoFingerTouch = false;
-    // Deactivate all keys to be safe
-    for (let i = 1; i <= 4; i++) {
-        deactivateKey(i);
-    }
 }, false);
 
 

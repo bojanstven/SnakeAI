@@ -7,15 +7,10 @@
     <link rel="icon" href="favicon.ico" type="image/x-icon">
     <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
     <link rel="stylesheet" href="styles.css">
-</head>
-<body>
     <div id="game-container">
         <div id="title-score">
             <div id="game-title"><strong>Snake AI Game</strong></div>
-            <div id="high-score">
-                <img src="svg/trophy.svg" alt="High Score" class="trophy-icon" width="38" height="38">
-                Best: <span id="high-score-value">0</span>
-            </div>
+            <div id="high-score"><span class="material-symbols-outlined trophy">family_star</span> Best: <span id="high-score-value">0</span></div>
         </div>
         <div id="game-area-container">
             <!-- Front side (game) -->
@@ -28,7 +23,7 @@
                 <div class="settings-panel">
                     <div class="settings-header">
                         <button id="close-settings" class="control-button">
-                            <img src="svg/arrow_back.svg" alt="Back" class="control-icon" width="24" height="24">
+                            <i class="material-icons">arrow_back</i>
                         </button>
                         <h2>Game Settings</h2>
                     </div>
@@ -54,39 +49,31 @@
                 </div>
             </div>
         </div>
-        <div id="score-level">
+                <div id="score-level">
             <div id="score">Score: 0</div>
             <div id="level">Level: 1</div>
         </div>
        
+
         <div id="controls">
-            <button id="wall-mode" class="control-button">
-                <img src="svg/security.svg" alt="Wall Mode" class="control-icon" width="24" height="24">
-                Walls
-            </button>
-                        <button id="gamepad-mode" class="control-button">
-                <img src="svg/stadia_controller.svg" alt="Gamepad Mode" class="control-icon" width="24" height="24">
-                Gamepad
-            </button>
-            <button id="ai-mode" class="control-button">
-                <img src="svg/rocket_launch.svg" alt="AI Mode" class="control-icon" width="24" height="24">
-                Autoplay
-            </button>
-                    </div>
+            <button id="wall-mode" class="control-button"><i class="material-icons">security</i> Walls</button>
+            <button id="gamepad-mode" class="control-button"><span class="material-symbols-outlined">stadia_controller</span> Gamepad</button>
+            <button id="ai-mode" class="control-button"><i class="material-icons">rocket_launch</i> Autoplay</button>
+        </div>
 
         <div id="game-controls-config" class="controls">
             <button id="btnSound" class="control-button">
-                <img src="svg/volume_up.svg" alt="Sound" class="control-icon" width="24" height="24">
+                <i class="material-icons">volume_up</i>
             </button>
             <button id="btnSettings" class="control-button">
-                <img src="svg/settings.svg" alt="Settings" class="control-icon" width="24" height="24">
+                <i class="material-icons">settings</i>
             </button>
         </div>
         
-        <div id="version-info">
-            <div>Snake AI game <span id="version-number"></span></div>
-            <div id="powered-by">
-                <img src="claude.ai.png" alt="Claude.ai">
+                <div id="version-info">
+                    <div>Snake AI game <span id="version-number"></span></div>
+                    <div id="powered-by">
+                <img src="claude.ai.png">
                 Powered by Claude.ai
             </div>
         </div>
